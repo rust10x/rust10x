@@ -1,0 +1,11 @@
+[pack]
+namespace = "pro"
+name = "rust10x"
+version = "0.2.2-WIP"
+
+
+# -- Optional section
+license = "MIT or Apache 2"
+homepage = "https://aipack.ai/"
+repo = "https://github.com/aipack-ai/packs-pro"
+author = "Jeremy Chone"

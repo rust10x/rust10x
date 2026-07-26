@@ -1,0 +1,104 @@
+# -- Base
+# optional: Best pratice is to ignore any path starting with . by default
+.*
+!.gitignore
+
+# will be gen from md
+*.html
+
+# -- AIPack
+# Ignore all .aipack files
+*.aipack
+# Ignore all .aipack/ folder by default
+.aipack/**
+
+## Optional: uncomment to allow the the .aipack/config.toml
+# !.aipack/
+# !.aipack/config.toml
+
+## Optional: uncomment to allow the .aipack/pack/custom/**
+# !.aipack/pack/
+# !.aipack/pack/custom/
+# !.aipack/pack/custom/**
+
+# -- Dev default
+tmp/
+dist/
+out/
+*.lock
+*.lockb
+*.log
+
+# -- Nodejs
+node_modules/
+package-lock.json
+!.mocharc.yaml
+report.*.json
+
+# -- Python
+__pycache__/
+*.py[cod]
+*py.class
+
+# -- Rust
+target/
+# !Cargo.lock # commented by default
+!.cargo/
+
+# -- Safety net
+cdk.out/
+*.exe
+
+# Doc Files
+*.pdf
+*.docx
+*.xlsx
+*.pptx
+*.doc
+*.xls
+*.ppt
+*.page
+
+# Data Files
+*.db3
+*.sqlite3
+*.sqlite
+*.s3db
+*.parquet
+*.map
+*.zip
+*.gz
+*.tar
+*.tgz
+*.vsix
+*.mdb
+
+# Images / design files
+*.icns
+*.ico
+*.jpeg
+*.jpg
+*.png
+*.bmp
+*.eps
+*.ai
+*.sketch
+
+# Videos
+*.mov
+*.mp4
+*.webm
+*.ogg
+*.avi
+
+# Audio
+*.mp3
+*.wav
+*.flac
+
+# -- others
+# Allows .env (make sure only dev info)
+# !.env # Commented by default
+
+# Allow vscode
+# !.vscode # Commented by default
