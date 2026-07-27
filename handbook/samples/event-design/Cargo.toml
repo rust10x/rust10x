@@ -1,0 +1,12 @@
+[package]
+name = "event-base-sample"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# -- Async & Events
+tokio = { version = "1", features = ["full"] }
+futures = "0.3.31"
+crossfire = "3.1.12"
+# -- Others
+derive_more = { version = "2", features = ["from","display","debug", "into", "deref"] }
