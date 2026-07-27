@@ -22,7 +22,7 @@ All contributions are reviewed for clarity, accuracy, and alignment with the pro
 
 ## Note on AIPack `pro@rust10x`
 
-The `knowledge/` folder is deployed as the `pro@rust10x` AI Pack and replaces the content in the [AIPack packs-pro](https://github.com/aipack-ai/packs-pro) repo.
+The `handbook/` folder is deployed as the `pro@rust10x` AI Pack and replaces the content in the [AIPack packs-pro](https://github.com/aipack-ai/packs-pro) repo.
 
 ---
 
