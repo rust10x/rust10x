@@ -15,13 +15,15 @@ mod support;
 mod event_base_error;
 mod event_new;
 mod event_once;
+mod event_mpmc;
+mod event_mpsc;
 mod event_spsc;
-mod event_xpxc;
 
 pub use event_base_error::{EventBaseError, EventBaseResult};
 pub use event_new::*;
 pub use event_once::{OnceRx, OnceTx};
+pub use event_mpmc::*;
+pub use event_mpsc::*;
 pub use event_spsc::*;
-pub use event_xpxc::*;
 
 // endregion: --- Modules
