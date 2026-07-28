@@ -18,7 +18,7 @@ Also, for fully transparency, the idea, it to have `https://rust10x.com` will be
 
 Contributions are welcome. To help keep reviews focused and efficient, please open an issue for substantial proposals before starting work, keep pull requests scoped to a single improvement, and include enough context for maintainers to understand the change.
 
-All contributions are reviewed for clarity, accuracy, and alignment with the project's goals. By contributing, you agree that your work may be used as part of Rust10x and its related educational and commercial offerings. Contributions are voluntary and do not create any expectation of compensation, revenue sharing, ownership, or other financial participation.
+Unless explicitly stated otherwise, contributions are accepted under the same MIT or Apache-2.0 terms as the rest of the repository.
 
 ## Note on AIPack `pro@rust10x`
 
