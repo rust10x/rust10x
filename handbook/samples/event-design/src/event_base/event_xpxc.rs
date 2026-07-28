@@ -50,6 +50,11 @@ where
 		self.name
 	}
 
+	/// Returns whether every receiver has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
+	}
+
 	/// Sends a message asynchronously, waiting until channel capacity is available.
 	///
 	/// `T: Unpin` is required by Crossfire's asynchronous send future. Callers that
@@ -109,6 +114,11 @@ where
 	/// Returns the diagnostic name assigned when the channel was created.
 	pub fn name(&self) -> &'static str {
 		self.name
+	}
+
+	/// Returns whether every sender has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
 	}
 
 	/// Mutable access keeps the receive future `Send` without requiring this single-consumer receiver to be `Sync`.
@@ -195,6 +205,11 @@ where
 		self.name
 	}
 
+	/// Returns whether every receiver has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
+	}
+
 	/// Sends a message asynchronously, waiting until channel capacity is available.
 	///
 	/// `T: Unpin` is required by Crossfire's asynchronous send future. Callers that
@@ -254,6 +269,11 @@ where
 	/// Returns the diagnostic name assigned when the channel was created.
 	pub fn name(&self) -> &'static str {
 		self.name
+	}
+
+	/// Returns whether every sender has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
 	}
 
 	/// Waits for a message.

@@ -62,6 +62,11 @@ where
 		support::handle_try_send_result(self.inner.try_send(message), self.name)
 	}
 
+	/// Returns whether the receiver has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
+	}
+
 	/// Converts this unique asynchronous sender into its synchronous counterpart.
 	pub fn into_sync_tx(self) -> SyncSpscTx<T> {
 		let sync_tx = self.inner.into_blocking();
@@ -103,6 +108,11 @@ where
 			// No message can arrive after the sender disconnects.
 			Err(error @ TryRecvError::Disconnected) => support::handle_try_recv_error(error, self.name),
 		}
+	}
+
+	/// Returns whether the sender has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
 	}
 
 	/// Converts this unique asynchronous receiver into its synchronous counterpart.
@@ -166,6 +176,11 @@ where
 	pub fn try_send(&self, message: T) -> EventBaseResult<Option<T>> {
 		support::handle_try_send_result(self.inner.try_send(message), self.name)
 	}
+
+	/// Returns whether the receiver has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
+	}
 }
 
 impl<T> SyncSpscRx<T>
@@ -199,6 +214,11 @@ where
 			// No message can arrive after the sender disconnects.
 			Err(error @ TryRecvError::Disconnected) => support::handle_try_recv_error(error, self.name),
 		}
+	}
+
+	/// Returns whether the sender has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
 	}
 }
 

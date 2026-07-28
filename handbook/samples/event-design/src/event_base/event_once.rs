@@ -27,6 +27,11 @@ impl<T> OnceTx<T> {
 	pub fn send(self, message: T) {
 		self.inner.send(message);
 	}
+
+	/// Returns whether the receiver has disconnected.
+	pub fn is_disconnected(&self) -> bool {
+		self.inner.is_disconnected()
+	}
 }
 
 // endregion: --- Implementation OnceTx<T>
@@ -69,6 +74,11 @@ impl<T> OnceRx<T> {
 			Err(TryRecvError::Empty) => Ok(None),
 			Err(TryRecvError::Disconnected) => Err(EventBaseError::RxDisconnected { name: self.name }),
 		}
+	}
+
+	/// Returns whether the receiver has disconnected.
+	pub fn is_empty(&self) -> bool {
+		self.inner.is_empty()
 	}
 }
 
