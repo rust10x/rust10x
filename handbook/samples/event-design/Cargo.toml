@@ -3,6 +3,10 @@ name = "event-base-sample"
 version = "0.1.0"
 edition = "2024"
 
+[lints.rust]
+unsafe_code = "forbid"
+unused = { level = "allow", priority = -1 } # For exploratory dev.
+
 [dependencies]
 # -- Async & Events
 tokio = { version = "1", features = ["full"] }
