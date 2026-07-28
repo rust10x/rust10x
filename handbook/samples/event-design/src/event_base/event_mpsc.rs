@@ -1,8 +1,38 @@
 //! Asynchronous multi-producer channel endpoint wrappers.
 
 use crate::event_base::event_base_error::{EventBaseError, EventBaseResult};
-use crate::event_base::support;
+use crate::event_base::{DEFAULT_CAPACITY, support};
 use crossfire::{AsyncRx, MAsyncTx, TryRecvError, TrySendError, mpsc};
+
+// region:    --- Factories
+
+/// Creates a bounded asynchronous MPSC channel with [`DEFAULT_CAPACITY`].
+///
+/// `name` is retained by both endpoints for diagnostics and disconnection
+/// errors.
+pub fn new_mpsc_bounded_default<T>(name: &'static str) -> EventBaseResult<(MpscTx<T>, MpscRx<T>)>
+where
+	T: Send + 'static,
+{
+	new_mpsc_bounded(name, DEFAULT_CAPACITY)
+}
+
+/// Creates a bounded asynchronous MPSC channel.
+///
+/// `capacity` is the number of queued messages and must be greater than zero.
+/// A zero capacity returns [`EventBaseError::InvalidCapacity`].
+pub fn new_mpsc_bounded<T>(name: &'static str, capacity: usize) -> EventBaseResult<(MpscTx<T>, MpscRx<T>)>
+where
+	T: Send + 'static,
+{
+	if capacity == 0 {
+		return Err(EventBaseError::InvalidCapacity { name, capacity });
+	}
+	let (tx, rx) = mpsc::bounded_async::<T>(capacity);
+	Ok((MpscTx { inner: tx, name }, MpscRx { inner: rx, name }))
+}
+
+// endregion: --- Factories
 
 // region:    --- MpscTx Implementations
 

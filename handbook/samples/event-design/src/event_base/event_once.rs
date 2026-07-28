@@ -3,6 +3,19 @@
 use crate::event_base::event_base_error::{EventBaseError, EventBaseResult};
 use crossfire::{TryRecvError, oneshot};
 
+// region:    --- Factory Functions
+
+/// Creates a single-use asynchronous channel.
+///
+/// `name` is retained by both endpoints for diagnostics and disconnection
+/// errors.
+pub fn new_once<T>(name: &'static str) -> (OnceTx<T>, OnceRx<T>) {
+	let (tx, rx) = oneshot::oneshot();
+	(OnceTx { inner: tx, name }, OnceRx { inner: rx, name })
+}
+
+// endregion: --- Factory Functions
+
 // region:    --- Implementation OnceTx<T>
 
 /// Single-use producer, consumed on send.

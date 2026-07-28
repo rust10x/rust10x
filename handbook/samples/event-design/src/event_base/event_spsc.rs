@@ -1,8 +1,38 @@
 //! Asynchronous and synchronous single-producer channel endpoint wrappers.
 
 use crate::event_base::event_base_error::EventBaseResult;
-use crate::event_base::support;
+use crate::event_base::{DEFAULT_CAPACITY, EventBaseError, support};
 use crossfire::{AsyncRx, AsyncTx, Rx, TryRecvError, Tx, spsc};
+
+// region:    --- Fatories
+
+/// Creates a bounded asynchronous SPSC channel with [`DEFAULT_CAPACITY`].
+///
+/// `name` is retained by both endpoints for diagnostics and disconnection
+/// errors.
+pub fn new_spsc_bounded_default<T>(name: &'static str) -> EventBaseResult<(SpscTx<T>, SpscRx<T>)>
+where
+	T: Send + 'static,
+{
+	new_spsc_bounded(name, DEFAULT_CAPACITY)
+}
+
+/// Creates a bounded asynchronous SPSC channel.
+///
+/// `capacity` is the number of queued messages and must be greater than zero.
+/// A zero capacity returns [`EventBaseError::InvalidCapacity`].
+pub fn new_spsc_bounded<T>(name: &'static str, capacity: usize) -> EventBaseResult<(SpscTx<T>, SpscRx<T>)>
+where
+	T: Send + 'static,
+{
+	if capacity == 0 {
+		return Err(EventBaseError::InvalidCapacity { name, capacity });
+	}
+	let (tx, rx) = spsc::bounded_async::<T>(capacity);
+	Ok((SpscTx { inner: tx, name }, SpscRx { inner: rx, name }))
+}
+
+// endregion: --- Fatories
 
 // region:    --- Async Spsc Implementations
 
