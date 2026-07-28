@@ -2,6 +2,10 @@
 
 Here are the Rust10x comments best practices that build upon Rust comment best practices.
 
+## When To Use
+
+Use this guide whenever writing or updating comments, documentation comments, code regions, or code section markers in Rust code. Use it alongside the always-included `best-practices-general.md` and `best-practices-code-structure.md` guides.
+
 Make sure to not add other comment styles for delimiting than those styles, except if the code already uses some patterns. 
 
 ### Comment Delimiters

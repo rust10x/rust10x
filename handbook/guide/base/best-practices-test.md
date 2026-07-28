@@ -1,10 +1,8 @@
 # Rust10X test best practices and conventions
 
-
 ## When To Use
 
-Use this file when writing or updating Rust test code. 
-
+Use this file when writing or updating Rust test code. Use it alongside the always-included `best-practices-general.md` and `best-practices-code-structure.md` guides.
 
 ## Unit Test
 

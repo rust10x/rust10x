@@ -1,8 +1,8 @@
 # General Rust Best practices
 
-## When to use this file
+## When To Use
 
-Use this file every time you write or update Rust code. It is the general guide for writing clean, idiomatic Rust code, covering error handling (avoiding unwrap), modern syntax (if-let-chains, match ergonomics), macro usage, async closures, iterator patterns, and standardized file organization using regions.
+Always include this file, together with `best-practices-code-structure.md`, whenever writing, reviewing, or updating Rust code. It is the general guide for writing clean, idiomatic Rust code, covering error handling (avoiding unwrap), modern syntax (if-let-chains, match ergonomics), macro usage, async closures, iterator patterns, and standardized file organization using regions.
 
 ## Common Rules & Best Practices
 
@@ -120,6 +120,8 @@ Now supported for tuples of length 1 through 12. You can collect into multiple c
 
 
 ## Single-File Code Structure
+
+See `best-practices-code-structure.md` for the complete source-file and module organization guidance.
 
 When writing or adding code to a file, follow this structure.
 
