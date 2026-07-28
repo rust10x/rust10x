@@ -1,0 +1,17 @@
+[package]
+name = "ipc-socket-design"
+version = "0.1.0"
+edition = "2024"
+
+[lints.rust]
+unsafe_code = "forbid"
+# unused = { level = "allow", priority = -1 } # For exploratory dev.
+
+[dependencies]
+# -- Async
+tokio = { version = "1", features = ["full"] }
+# -- Serialization
+serde = { version = "1", features = ["derive"] }
+postcard = { version = "1", features = ["use-std"] }
+# -- Others
+derive_more = { version = "2", features = ["from", "display", "deref", "into"] }
