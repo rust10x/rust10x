@@ -32,7 +32,7 @@ The application layer depends on `ClientConnection` and `RequestHandler`, but do
 The implementation has three layers:
 
 ```mermaid
-flowchart TB
+flowchart LR
     App["Application layer<br /><small>Client, Server, Call, CallResult</small>"]
     Transport["Socket transport layer<br /><small>ClientConnection, ServerListener, RequestHandler</small>"]
     Protocol["Protocol layer<br /><small>Request, Response, RequestId, wire frames</small>"]
@@ -92,12 +92,15 @@ sequenceDiagram
     participant S as ServerTransport
     participant H as RequestHandler
 
+    C->>C: Register pending call 42
     C->>S: Request { id: 42, method }
     S->>H: exec(call)
     H-->>S: reply
     S-->>C: Response { id: 42, reply }
-    C->>C: Resolve pending call 42
+    C->>C: Remove pending call 42 and resolve caller
 ```
+
+The two client self-messages represent local pending-call bookkeeping, not socket traffic. `ClientConnection` registers the caller before writing the request, then its background reader removes the matching pending entry and resolves that caller after receiving the response.
 
 The generic envelope types separate transport metadata from application data:
 
@@ -141,11 +144,11 @@ See `src/ipc/socket/wire.rs`.
 
 ## Client Connection
 
-`ClientTransport<M, R>` owns one connected client socket. Calls are safe through a shared reference, allowing application tasks to issue calls concurrently.
+`ClientConnection<M, R>` owns one connected client socket. Calls are safe through a shared reference, allowing application tasks to issue calls concurrently.
 
 ```mermaid
 flowchart TB
-    Calls["Concurrent ClientTransport::invoke(call) calls"] --> Id["RequestIdGen"]
+    Calls["Concurrent ClientConnection::invoke(call) calls"] --> Id["RequestIdGen"]
     Id --> Pending["Pending map<br /><small>RequestId to oneshot sender</small>"]
     Calls --> Writer["Async mutex around write half"]
     Writer --> Socket["UnixStream write half"]
@@ -162,7 +165,7 @@ For each `invoke(call)`, the client:
 3. Writes the `Request` while holding the write-half mutex.
 4. Awaits its corresponding oneshot receiver.
 
-The mutex prevents concurrent writers from interleaving frame bytes. The background reader continuously decodes responses, removes the matching pending sender, and resolves the awaiting call.
+Registering the sender before writing prevents a fast response from arriving before the caller is ready to receive it. The mutex prevents concurrent writers from interleaving frame bytes. The background reader continuously decodes responses, removes the matching pending sender, and resolves the awaiting call.
 
 This permits requests to be sent in one order and replies to arrive in another order. The request id, rather than arrival order, determines which caller receives each reply.
 
