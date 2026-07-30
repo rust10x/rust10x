@@ -22,10 +22,11 @@ unsafe_code = "forbid"
 [dependencies]
 # -- Async
 tokio = { version = "1", features = ["full"] }
-# -- Json
+# -- Serde
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 serde_with = { version = "3", features = ["macros"] }
+# -- Content Formats
+serde_json = "1"
 # -- Others
 derive_more = {version = "2", features = ["from", "display"] }
 ````
@@ -37,6 +38,7 @@ derive_more = {version = "2", features = ["from", "display"] }
 - The dependencies are organized by sections and should include those sections only if asked (except the `Others` section that can be added when starting).
 - When starting, make sure to add the `# -- Others` if `derive_more` is present.
 - The convention is to split the dependencies into sections with `# -- section_name`, and these are the very basic sections. But do not add empty line before or after this comment line. 
+- `# -- Content Formats` is where we have all of the crates parsing, generating, and manipulating specific file formats (json, toml, pdf, html..)
 - Except if explicitly asked but, only add the `# -- Others` with `derive_more` by default, and then the section needed. 
 
 Some popular dependencies sections
