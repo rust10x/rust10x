@@ -35,6 +35,59 @@ process("data", ProcessOptions { verbose: true });
 process("data", Some(ProcessOptions { verbose: true }));
 ```
 
+## Convenience
+
+If used a lot, user can have a `src/macros.rs` or someting similar with 
+
+```rust
+macro_rules! impl_from_optional {
+	($ty:ty) => {
+		impl From<Option<$ty>> for $ty {
+			fn from(value: Option<$ty>) -> Self {
+				value.unwrap_or_default()
+			}
+		}
+	};
+}
+
+// the usage as
+impl_from_optional!(WebClientOptions);
+```
+
+Or with the macro_rules_attribute derive alias
+
+```
+macro_rules! FromOptional {
+	(
+		$(#[$attr:meta])*
+		$vis:vis struct $name:ident {
+			$($fields:tt)*
+		}
+	) => {
+		impl From<Option<$name>> for $name {
+			fn from(value: Option<$name>) -> Self {
+				value.unwrap_or_default()
+			}
+		}
+	};
+}
+```
+
+
+Then, use it as
+
+```rust
+// 
+use macro_rules_attribute as mra;
+
+#[mra::derive(Debug, Default, FromOptional!)]
+pub struct WebClientOptions {
+	// ...
+}
+```
+
+
+
 ## When to Use This Pattern
 
 - The options struct has a natural `Default`.

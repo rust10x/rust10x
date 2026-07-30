@@ -119,6 +119,24 @@ pub use event_base::*;
 
 Implementation details should normally live in dedicated source files rather than in `mod.rs`.
 
+## Macro Modules
+
+When a crate has declarative macros or macro-related helpers that form a coherent group, place them in a top-level `src/macros/` module rather than mixing them with domain modules. Expose this module with `pub mod macros;` at the crate root so its public macros are accessed through `crate::macros::...`.
+
+Use `src/macros/mod.rs` to declare macro files and reexport its public macro API:
+
+```rust
+// region:    --- Modules
+
+mod from_optional;
+
+pub use from_optional::FromOptional;
+
+// endregion: --- Modules
+```
+
+Keep `src/macros/` focused on crate-level declarative macro definitions and macro support. Keep crate-wide derive aliases separately in `src/derive_aliases.rs`, reexported from the crate root for use throughout the crate. Use a more specific nested module only when the macros belong exclusively to a narrower module tree.
+
 ## Support Modules
 
 Use `support.rs` or `support/mod.rs` for generic utilities that do not fit a clearer module name and are intended only for a particular module tree.
