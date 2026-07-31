@@ -4,7 +4,7 @@
 //! resolves pending calls by matching the response id with the request id.
 
 use super::envelope::{Request, RequestId, RequestIdGen, Response};
-use super::wire::{read_frame, write_frame};
+use super::wire::{WireReader, WireWriter};
 use crate::Result;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -27,7 +27,7 @@ type Pending<R> = Arc<Mutex<HashMap<RequestId, oneshot::Sender<R>>>>;
 pub struct ClientConnection<M, R> {
 	label: String,
 	id_gen: RequestIdGen,
-	writer: AsyncMutex<OwnedWriteHalf>,
+	writer: AsyncMutex<WireWriter<OwnedWriteHalf, Request<M>>>,
 	pending: Pending<R>,
 	reader_task: JoinHandle<()>,
 	_method: PhantomData<fn(M)>,
@@ -45,6 +45,8 @@ where
 		let (reader, writer) = stream.into_split();
 
 		let pending: Pending<R> = Arc::new(Mutex::new(HashMap::new()));
+		let reader = WireReader::<_, Response<R>>::new(reader);
+		let writer = WireWriter::<_, Request<M>>::new(writer);
 		let reader_task = spawn_reader(label.clone(), reader, pending.clone());
 
 		Ok(Self {
@@ -72,7 +74,7 @@ where
 		let request = Request { id, method };
 		let write_res = {
 			let mut writer = self.writer.lock().await;
-			write_frame(&mut *writer, &request).await
+			writer.write_frame(&request).await
 		};
 
 		if let Err(err) = write_res {
@@ -109,13 +111,13 @@ impl<M, R> Drop for ClientConnection<M, R> {
 
 // region:    --- Support
 
-fn spawn_reader<R>(label: String, mut reader: OwnedReadHalf, pending: Pending<R>) -> JoinHandle<()>
+fn spawn_reader<R>(label: String, mut reader: WireReader<OwnedReadHalf, Response<R>>, pending: Pending<R>) -> JoinHandle<()>
 where
 	R: DeserializeOwned + Send + 'static,
 {
 	tokio::spawn(async move {
 		loop {
-			match read_frame::<_, Response<R>>(&mut reader).await {
+			match reader.read_frame().await {
 				Ok(Some(response)) => {
 					let res_tx = pending
 						.lock()

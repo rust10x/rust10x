@@ -5,7 +5,7 @@
 //! task owns the write half and serializes the outgoing frames.
 
 use super::request_handler::RequestHandler;
-use super::wire::{read_frame, write_frame};
+use super::wire::{WireReader, WireWriter};
 use super::{Request, Response};
 use crate::Result;
 use std::path::Path;
@@ -63,13 +63,15 @@ impl<H: RequestHandler> ServerListener<H> {
 // region:    --- Support
 
 async fn handle_conn<H: RequestHandler>(stream: UnixStream, handler: Arc<H>) -> Result<()> {
-	let (mut reader, mut writer) = stream.into_split();
+	let (reader, writer) = stream.into_split();
+	let mut reader = WireReader::<_, Request<H::Method>>::new(reader);
+	let mut writer = WireWriter::<_, Response<H::Reply>>::new(writer);
 	let (res_tx, mut res_rx) = mpsc::channel::<Response<H::Reply>>(32);
 
 	// -- Single writer task, so concurrent request tasks cannot interleave frames.
 	let writer_task = tokio::spawn(async move {
 		while let Some(response) = res_rx.recv().await {
-			if let Err(err) = write_frame(&mut writer, &response).await {
+			if let Err(err) = writer.write_frame(&response).await {
 				eprintln!("service    - write error: {err}");
 				break;
 			}
@@ -77,7 +79,7 @@ async fn handle_conn<H: RequestHandler>(stream: UnixStream, handler: Arc<H>) -> 
 	});
 
 	// -- Read loop, one task per request.
-	while let Some(request) = read_frame::<_, Request<H::Method>>(&mut reader).await? {
+	while let Some(request) = reader.read_frame().await? {
 		let handler = handler.clone();
 		let res_tx = res_tx.clone();
 		tokio::spawn(async move {

@@ -4,6 +4,8 @@ This guide describes the Unix domain socket request and response transport imple
 
 The design provides typed application calls over one multiplexed local socket connection. It separates application behavior from transport concerns such as framing, request correlation, concurrent calls, and connection lifecycle.
 
+The framing boundary uses Tokio's `LengthDelimitedCodec` behind internal typed `WireReader` and `WireWriter` adapters. The adapters preserve postcard payloads and the existing transport architecture while replacing manual frame parsing and encoding.
+
 ```mermaid
 flowchart LR
     Client["Application client<br /><small>typed business methods</small>"] --> ClientConnection["ClientConnection&lt;Method, Reply&gt;"]
@@ -35,7 +37,7 @@ The implementation has three layers:
 flowchart LR
     App["Application layer<br /><small>Client, Server, Call, CallResult</small>"]
     Transport["Socket transport layer<br /><small>ClientConnection, ServerListener, RequestHandler</small>"]
-    Protocol["Protocol layer<br /><small>Request, Response, RequestId, wire frames</small>"]
+    Protocol["Protocol layer<br /><small>Request, Response, RequestId, typed wire adapters</small>"]
     Unix["Unix domain socket<br /><small>Tokio UnixStream</small>"]
 
     App --> Transport
@@ -45,7 +47,7 @@ flowchart LR
 
 - The application layer defines business operations, reply values, and shared service state.
 - The socket transport layer owns connection behavior and invokes application logic through `RequestHandler`.
-- The protocol layer defines generic request and response envelopes plus length-delimited serialization.
+- The protocol layer defines generic request and response envelopes plus codec-backed length-delimited serialization.
 - Tokio's Unix domain socket types provide the local process-to-process connection.
 
 See `src/app/` for the application layer and `src/ipc/socket/` for the transport and protocol layers.
@@ -122,7 +124,7 @@ See `src/ipc/socket/envelope.rs`.
 
 ## Wire Format
 
-Socket streams provide ordered bytes, not message boundaries. The wire module therefore writes each serialized value as a length-delimited frame.
+Socket streams provide ordered bytes, not message boundaries. The wire module therefore uses a codec-backed length-delimited frame for each serialized value.
 
 ```text
 [u32 payload length, little-endian][postcard payload bytes]
@@ -152,11 +154,13 @@ flowchart TB
     Id --> Pending["Pending map<br /><small>RequestId to oneshot sender</small>"]
     Calls --> Writer["Async mutex around write half"]
     Writer --> Socket["UnixStream write half"]
-    Socket --> Reader["Background reader task"]
+    Socket --> Reader["Background WireReader task"]
     Reader --> Match["Match response id"]
     Match --> Pending
     Pending --> Callers["Awaiting callers"]
 ```
+
+`ClientConnection` wraps the owned write half in `WireWriter<OwnedWriteHalf, Request<M>>` and the read half in `WireReader<OwnedReadHalf, Response<R>>`. These adapters keep codec and postcard details inside the socket layer.
 
 For each `invoke(call)`, the client:
 
@@ -183,19 +187,21 @@ flowchart TB
     Accept --> ConnA["Connection task A"]
     Accept --> ConnB["Connection task B"]
 
-    ConnA --> Read["Sequential request reader"]
+    Read["WireReader request loop"]
     Read --> Execute["One task per request"]
     Execute --> Handler["Shared RequestHandler"]
     Execute --> Queue["Per-connection response channel"]
-    Queue --> Write["Single writer task"]
+    Queue --> Write["Single WireWriter task"]
 ```
+
+Each accepted connection wraps its owned socket halves in typed `WireReader` and `WireWriter` adapters, keeping codec and postcard details inside the transport layer.
 
 Each accepted connection has:
 
-- A sequential read loop that decodes request frames.
+- A sequential `WireReader` loop that decodes request frames.
 - One spawned task per request, allowing handler execution to overlap.
 - A bounded response channel that joins request tasks to the writer task.
-- One writer task that serializes response frames.
+- One `WireWriter` task that serializes and flushes response frames.
 
 The single writer task is important because multiple request tasks can finish concurrently. It ensures each response frame is written as an uninterrupted byte sequence.
 
@@ -256,7 +262,7 @@ Keep responsibilities at their existing layer:
 - Add business operations, request payloads, and reply values in `src/app/`.
 - Add typed client methods in `src/app/client.rs`.
 - Implement service behavior and state in `src/app/server.rs`.
-- Keep framing, correlation, socket ownership, and connection concurrency in `src/ipc/socket/`.
+- Keep framing, postcard serialization, correlation, socket ownership, and connection concurrency in `src/ipc/socket/`.
 - Do not expose request ids, postcard details, or socket split halves from the application client API.
 
 The transport can serve another application contract by supplying different `Method`, `Reply`, and `RequestHandler` types. The socket framing and request correlation design remain unchanged.
@@ -283,7 +289,7 @@ src/
 
 - `app/` contains the example business contract, typed facade, and shared service state.
 - `ipc/socket/envelope.rs` defines generic correlated request and response types.
-- `ipc/socket/wire.rs` defines postcard length-delimited frames.
+- `ipc/socket/wire.rs` defines the typed postcard adapter around `LengthDelimitedCodec`.
 - `ipc/socket/client_transport.rs` multiplexes concurrent client calls.
 - `ipc/socket/server_transport.rs` accepts connections and coordinates concurrent request execution with serialized writes.
 - `ipc/socket/request_handler.rs` defines the application seam.
