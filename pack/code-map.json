@@ -1,0 +1,525 @@
+{
+  "rel_base": "./",
+  "file_map": {
+    "samples/event-design/src/mock_tui/event.rs": {
+      "when_to_use": "Include when working with mock TUI event handling, channel creation, or simulating terminal inputs and resizing.",
+      "summary": "Defines TUI events, channels, and a mock run demo loop for testing event-driven architectures.",
+      "file_path": "samples/event-design/src/mock_tui/event.rs",
+      "kind": "text",
+      "hash": "a6c43106a84a83f347e2a97a45857b2c6b511b4d7df695b9586b0ee00b987936",
+      "mtime": 1785207325765576,
+      "public_types": [
+        "TuiTx",
+        "TuiRx",
+        "TuiEvent"
+      ],
+      "public_functions": [
+        "new_tui_channel",
+        "run_demo"
+      ]
+    },
+    "guide/domain/event/event-design.md": {
+      "when_to_use": "Include when designing, implementing, or refactoring asynchronous messaging, channels, event loops, or domain queues within the Rust application architecture.",
+      "summary": "Guide describing a three-level event/channel code design architecture for application messaging (Event-Base Facade, Use-Case Endpoint Aliases, and Domain Types) independent of the underlying channel backend.",
+      "file_path": "guide/domain/event/event-design.md",
+      "kind": "text",
+      "mtime": 1785206416732986,
+      "hash": "cf45c1d2749b288dca223409e03e125dde4526bd1af9342a92e2af4abc5ef486"
+    },
+    "samples/event-design/src/event_base/event_mpsc.rs": {
+      "when_to_use": "Include this file when working with asynchronous event channels, message passing, MPSC senders/receivers, or channel creation factories within the event_base module.",
+      "summary": "Provides asynchronous multi-producer single-consumer (MPSC) channel endpoint wrappers (MpscTx and MpscRx) built on top of the crossfire crate.",
+      "file_path": "samples/event-design/src/event_base/event_mpsc.rs",
+      "kind": "text",
+      "hash": "09bd08c052de8f79b5a6e9d5c29154d7a5ef0b6423fff1b9c9749652e3271ad0",
+      "mtime": 1785271940789676,
+      "public_types": [
+        "MpscTx",
+        "MpscRx"
+      ],
+      "public_functions": [
+        "new_mpsc_bounded_default",
+        "new_mpsc_bounded"
+      ]
+    },
+    "guide/base/pattern-function-options.md": {
+      "when_to_use": "Include this guide when designing functions with optional configuration parameters or options structs that benefit from ergonomic `None` or default handling.",
+      "summary": "Guide explaining the Function Options pattern in Rust using `impl Into<Options>` and `From<Option<Options>>` to simplify optional configuration arguments.",
+      "file_path": "guide/base/pattern-function-options.md",
+      "kind": "text",
+      "mtime": 1785428529234533,
+      "hash": "8a3cfaf106f5b0e6d052bfd769d4147dfa357555405b3b4791ef2003de79263f"
+    },
+    "samples/event-design/src/event_base/event_once.rs": {
+      "when_to_use": "Include when working with single-use oneshot event channels, asynchronous messaging, or implementing producer-consumer communication that occurs only once.",
+      "summary": "Provides single-use asynchronous event-base channel endpoints (OnceTx and OnceRx) utilizing crossfire oneshot channels.",
+      "file_path": "samples/event-design/src/event_base/event_once.rs",
+      "kind": "text",
+      "hash": "9cd3b73265ede78556e324ddd83d77a3eb332f04ee0da8d70b2850c783014eaf",
+      "mtime": 1785272074400930,
+      "public_types": [
+        "OnceTx",
+        "OnceRx"
+      ],
+      "public_functions": [
+        "new_once"
+      ]
+    },
+    "guide/domain/ipc/ipc-web-api.md": {
+      "when_to_use": "Include this file when designing, documenting, or implementing Web APIs, JSON-RPC endpoints, authentication schemes for web UI vs public API, or download routes in the domain.",
+      "summary": "Documentation outlining the Web API architecture, specifically JSON-RPC endpoints (/wapi/rpc vs /api/rpc), their separation of concerns, authentication differences, login/logoff routes, and REST-style endpoints for downloads.",
+      "file_path": "guide/domain/ipc/ipc-web-api.md",
+      "kind": "text",
+      "mtime": 1775792078990446,
+      "hash": "dd104c17c9e1ddda8948caf31da4d18b18beffad425123a403d398c624a756bc"
+    },
+    "samples/ipc-socket-design/Cargo.toml": {
+      "when_to_use": "Include this file when inspecting project dependencies, Rust edition settings, or crate configurations for the IPC socket design sample.",
+      "summary": "Rust package manifest for the ipc-socket-design sample project, configuring dependencies such as tokio, serde, postcard, and derive_more, along with strict safety lints.",
+      "file_path": "samples/ipc-socket-design/Cargo.toml",
+      "kind": "text",
+      "mtime": 1785536972510514,
+      "hash": "de935d02258a308553fbbb7611fefd912bdf8096674c9a2c6ef460609e32b91f"
+    },
+    "guide/base/best-practices-test.md": {
+      "when_to_use": "Use this file when writing or updating Rust test code, unit tests, integration tests, or test support modules.",
+      "summary": "Guidelines and conventions for writing unit tests, integration tests, and test support utilities in Rust projects.",
+      "file_path": "guide/base/best-practices-test.md",
+      "kind": "text",
+      "mtime": 1785274782812513,
+      "hash": "063f69927e930dac1d21ad85abab8879b4a1a2d0153c0ff16931fa7a03c22769"
+    },
+    "samples/ipc-socket-design/src/ipc/socket/client_transport.rs": {
+      "when_to_use": "Use when implementing or modifying client-side IPC socket communication, multiplexing concurrent requests, or handling response correlation.",
+      "summary": "Implements the client-side IPC transport, managing multiplexed requests over a single Unix socket connection with an asynchronous writer and a background reader task.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/client_transport.rs",
+      "kind": "text",
+      "hash": "718e9fea8b3dfc0dec4aa130916b5ccad474e8a3e2f9adda37eb3fc0f2502e7c",
+      "mtime": 1785537364286620,
+      "public_types": [
+        "ClientConnection"
+      ],
+      "public_functions": [
+        "connect",
+        "invoke",
+        "label"
+      ]
+    },
+    "samples/ipc-socket-design/src/app/mod.rs": {
+      "when_to_use": "Include this file when working with the application layer's business protocol, service logic, or typed client/server abstractions that sit on top of the IPC socket transport.",
+      "summary": "Application layer module definition exposing the business protocol, service logic, and typed client.",
+      "file_path": "samples/ipc-socket-design/src/app/mod.rs",
+      "kind": "text",
+      "hash": "c963cbc73aa2c7ea87b721fd85176a800d393e104fa322ed194da81697d05f09",
+      "mtime": 1785357409872289,
+      "public_types": [],
+      "public_functions": []
+    },
+    "samples/event-design/src/event_base/mod.rs": {
+      "when_to_use": "Include this file when working with the foundational messaging layer, channel abstractions, or handling base event errors and results.",
+      "summary": "Root module for the Level 1 event_base messaging layer, providing an application-owned channel facade over Crossfire for MPSC, MPMC, SPSC, sync SPSC, and one-shot channels.",
+      "file_path": "samples/event-design/src/event_base/mod.rs",
+      "kind": "text",
+      "mtime": 1785272090323915,
+      "public_types": [
+        "EventBaseError",
+        "EventBaseResult"
+      ],
+      "hash": "2acb777fecf8f70c55a69fc2f15c0cf3474a81f5108183d958e3d88dfce48a7a"
+    },
+    "samples/ipc-socket-design/src/app/contract.rs": {
+      "when_to_use": "Include this file when you need to understand or modify the service API operations, request parameters, or response types.",
+      "summary": "Defines the application-level data contracts, operations (Call), parameters, and results (CallResult) carried inside the transport envelope.",
+      "file_path": "samples/ipc-socket-design/src/app/contract.rs",
+      "kind": "text",
+      "mtime": 1785357409877821,
+      "public_types": [
+        "Call",
+        "BiParams",
+        "CounterIncrParams",
+        "CallResult"
+      ],
+      "hash": "eb21bd63367bab88bc42b3292981f590e2fe50efc2f38880b8f5141066988b18"
+    },
+    "guide/base/best-practices-modern-rust.md": {
+      "when_to_use": "Include this file when writing or reviewing Rust code to ensure adherence to Rust Edition 2024 standards and modern best practices.",
+      "summary": "Guide on Rust Edition 2024 features and modern practices, including Future/IntoFuture prelude inclusion, boxed slice IntoIterator changes, Cargo resolver/table consistency, and diagnostic attributes.",
+      "file_path": "guide/base/best-practices-modern-rust.md",
+      "kind": "text",
+      "mtime": 1776045334526080,
+      "hash": "7a216e8b7cd42db9c90df5544e90d3e40d8981f0af19d58880ef58b6a11f4392"
+    },
+    "samples/event-design/src/event_base/event_mpmc.rs": {
+      "when_to_use": "Include this file when working with MPMC asynchronous channels, implementing multi-producer/multi-consumer event passing, or needing bounded asynchronous communication endpoints.",
+      "summary": "Provides asynchronous multi-producer multi-consumer (MPMC) channel endpoint wrappers (MpmcTx and MpmcRx) utilizing the crossfire library, along with creation and management functions.",
+      "file_path": "samples/event-design/src/event_base/event_mpmc.rs",
+      "kind": "text",
+      "hash": "9a94847d200db347e28ecac04bf1c97fa6c8ffd441d0276ff04deef092f2796b",
+      "mtime": 1785272007696898,
+      "public_types": [
+        "MpmcTx",
+        "MpmcRx"
+      ],
+      "public_functions": [
+        "new_mpmc_bounded_default",
+        "new_mpmc_bounded"
+      ]
+    },
+    "guide/domain/ipc/ipc-socket-design.md": {
+      "when_to_use": "Include this file when working on the IPC socket design, understanding the layering between the application contract and transport mechanisms, or modifying client/server socket communication samples.",
+      "summary": "Design guide and architecture documentation for a Unix domain socket request/response transport implemented with Tokio, featuring length-delimited framing, typed postcard payloads, and multiplexed concurrent calls.",
+      "file_path": "guide/domain/ipc/ipc-socket-design.md",
+      "kind": "text",
+      "mtime": 1785538150114899,
+      "hash": "04cccdf1a9a023a89731c0bdad56ad3371a3d73f353fee580bd5067ddc5ce1e2"
+    },
+    "guide/base/best-practices-new-project.md": {
+      "when_to_use": "Use this file when starting new Rust projects (binary or library) or experimental (xp) learning projects to determine project initialization, naming conventions, and initial file structure.",
+      "summary": "Guidelines and best practices for initializing new Rust projects, covering standard binary/library projects and experimental (xp) learning projects.",
+      "file_path": "guide/base/best-practices-new-project.md",
+      "kind": "text",
+      "mtime": 1776045185030929,
+      "hash": "160979d74f7e02bba3701af9d84702e6386abdbc2376cf5bb522580c9881b41b"
+    },
+    "samples/ipc-socket-design/src/ipc/socket/envelope.rs": {
+      "when_to_use": "Include when working with IPC communication framing, request/response messages, or request ID generation.",
+      "summary": "Defines the transport envelope for IPC socket communication, including request/response framing and correlation ID generation.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/envelope.rs",
+      "kind": "text",
+      "hash": "81e236ad47d12164c80e8d8c5bc3a8966eddf5bc029e60031151d81def5c4e86",
+      "mtime": 1785357409872872,
+      "public_types": [
+        "RequestId",
+        "RequestIdGen",
+        "Request",
+        "Response"
+      ],
+      "public_functions": [
+        "RequestIdGen::next_id"
+      ]
+    },
+    "samples/ipc-socket-design/src/ipc/socket/request_handler.rs": {
+      "when_to_use": "Use this file when implementing server-side application logic and request handling for the IPC socket system.",
+      "summary": "Defines the RequestHandler trait representing the service-side application seam for executing application methods and owning state.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/request_handler.rs",
+      "kind": "text",
+      "mtime": 1785357409873180,
+      "public_types": [
+        "RequestHandler"
+      ],
+      "hash": "e0582e99a88e697f5c8a1b5ac36911aff60dd9d51fed6ec683eaba4e8be5c72b"
+    },
+    "guide/base/best-practices-error.md": {
+      "when_to_use": "Include when writing error handling code, defining `error.rs`, or setting up Result types for tests, examples, applications, or libraries in Rust10x.",
+      "summary": "Guidelines and best practices for error handling in Rust10x, avoiding thiserror/anyhow in favor of a traditional error pattern using derive_more, custom error enums, and standardized Result type aliases.",
+      "file_path": "guide/base/best-practices-error.md",
+      "kind": "text",
+      "mtime": 1768792611484563,
+      "hash": "a93a8f2ba5318f8131d3c4635512f80dec34d499c3dea2bc6e8123d95e266266"
+    },
+    "samples/event-design/src/event_base/support.rs": {
+      "when_to_use": "Use when dealing with channel send/receive operations and need to translate underlying crossfire errors into standard EventBaseError types.",
+      "summary": "Internal error translation utilities shared by channel endpoint wrappers in the event_base module.",
+      "file_path": "samples/event-design/src/event_base/support.rs",
+      "kind": "text",
+      "mtime": 1785206381604117,
+      "hash": "2c88ed611a76272e7137dc89afa75d39bf56d41a63ca2fab9951c8b4e5536ef3",
+      "public_functions": [
+        "handle_send_result",
+        "handle_try_send_result",
+        "handle_recv_result",
+        "handle_try_recv_error"
+      ]
+    },
+    "guide/base/best-practices-code-structure.md": {
+      "when_to_use": "Always include this guide, together with best-practices-general.md, whenever writing, reviewing, or updating Rust code to determine how source files, module files, utility modules, trait implementations, private support code, and tests should be organized.",
+      "summary": "Best practices guide for organizing Rust source files, implementation blocks, private support code, tests, module files, macro modules, and support/common modules.",
+      "file_path": "guide/base/best-practices-code-structure.md",
+      "kind": "text",
+      "mtime": 1785430569987264,
+      "hash": "094d0f05923ddf63ad7b3a9c7becd98a5ff6496c15a53a6b5e3f953aa0a20081"
+    },
+    "guide/domain/ipc/ipc-model-joql.md": {
+      "when_to_use": "Include this file when working with or implementing inter-process communication (IPC) or CRUD-like JSON-RPC APIs that use the JOQL format for accessing and mutating database models.",
+      "summary": "Specification guide for JOQL (JSON-RPC 2.0 normative approach for model queries and mutations), covering method naming conventions, query structures ($includes, $filters, $orderBy, $limit, $offset), conditional operators, and error codes.",
+      "file_path": "guide/domain/ipc/ipc-model-joql.md",
+      "kind": "text",
+      "mtime": 1775792078989763,
+      "hash": "47b23a611a637b49e52bcea2ea01b43dff1a3fcecefce1e5e978d928c230b57c"
+    },
+    "guide/base/best-practices-examples.md": {
+      "when_to_use": "Use this file when creating or updating Rust example files in the examples/ directory, referencing naming conventions (c01...), main function signatures, and error handling strategies.",
+      "summary": "Guidelines and best practices for creating and naming Rust example files in the examples/ directory.",
+      "file_path": "guide/base/best-practices-examples.md",
+      "kind": "text",
+      "mtime": 1776045185030675,
+      "hash": "67ddab575377785d637e8b67964650add3b258d2a9bcd197bc83c8db5584f590"
+    },
+    "samples/event-design/Cargo.lock": {
+      "when_to_use": "Include when investigating exact dependency versions, dependency trees, or build reproducibility for the event-design sample.",
+      "summary": "Cargo lock file specifying exact dependency versions for the event-design sample project.",
+      "file_path": "samples/event-design/Cargo.lock",
+      "kind": "text",
+      "mtime": 1785190959753525,
+      "hash": "c56fce7e65ffe03142b00069d607f9b4f60c6a9d468c7d1837e2588b995c0730"
+    },
+    "guide/base/pattern-derive-aliases.md": {
+      "when_to_use": "Include this file when implementing or discussing derive aliases, macro_rules_attribute usage, or project module structures for declarative derive macros in Rust.",
+      "summary": "Best practices and guidelines for defining and using derive aliases in Rust projects using the macro_rules_attribute crate.",
+      "file_path": "guide/base/pattern-derive-aliases.md",
+      "kind": "text",
+      "mtime": 1785430695900498,
+      "hash": "6bab4e58fb185f213d440b1dcefbf5bc5f7506ed8b31d229b5a5397bcbee21a3"
+    },
+    "samples/ipc-socket-design/Cargo.lock": {
+      "when_to_use": "When inspecting dependency versions, troubleshooting build reproducibility, or checking third-party crate versions for the IPC socket design sample.",
+      "summary": "Cargo lockfile for the ipc-socket-design sample project, listing exact dependency versions used by the workspace.",
+      "file_path": "samples/ipc-socket-design/Cargo.lock",
+      "kind": "text",
+      "mtime": 1785536972706679,
+      "hash": "16f2ef59794d2b12e0b2a3e972e0dff5a85d30a8ca74046890027448b7425197"
+    },
+    "samples/event-design/src/mock_tui/mod.rs": {
+      "when_to_use": "Include this file when working with the mock TUI event system structure or importing the event submodule.",
+      "summary": "Module declaration file for the mock_tui module, exposing the event submodule.",
+      "file_path": "samples/event-design/src/mock_tui/mod.rs",
+      "kind": "text",
+      "hash": "fec591d357bc16436ecbbeaec7bc59c20ccd43c627183e57d1ffddc9e519724c",
+      "mtime": 1785207084947008,
+      "public_types": [],
+      "public_functions": []
+    },
+    "samples/event-design/src/event_base/event_spsc.rs": {
+      "when_to_use": "Include when you need to create, send messages through, or receive messages from single-producer single-consumer (SPSC) bounded channels in either async or sync contexts.",
+      "summary": "Provides asynchronous and synchronous single-producer single-consumer (SPSC) channel endpoint wrappers using the crossfire library.",
+      "file_path": "samples/event-design/src/event_base/event_spsc.rs",
+      "kind": "text",
+      "hash": "0f435a41bd3512fafbb9d89844e1296251f7fccab15cacb75d2f6b7764851ca0",
+      "mtime": 1785272050398184,
+      "public_types": [
+        "SpscTx",
+        "SpscRx",
+        "SyncSpscTx",
+        "SyncSpscRx"
+      ],
+      "public_functions": [
+        "new_spsc_bounded_default",
+        "new_spsc_bounded"
+      ]
+    },
+    "guide/base/best-practices-comments.md": {
+      "when_to_use": "Include when writing or updating comments, documentation comments, code regions, or code section markers in Rust code.",
+      "summary": "Guidelines and best practices for writing comments, documentation, code regions, and section markers in Rust code.",
+      "file_path": "guide/base/best-practices-comments.md",
+      "kind": "text",
+      "mtime": 1785274566570375,
+      "hash": "676d10e808ddd9f2e77f8cde3a8e05385b00020b259c4c522ad188d739b67aee"
+    },
+    "guide/base/best-practices-general.md": {
+      "when_to_use": "Always include this file, together with best-practices-code-structure.md, whenever writing, reviewing, or updating Rust code.",
+      "summary": "General Rust best practices guide covering error handling, modern syntax like Edition 2024 features, if-let chains, macro usage, async closures, and file organization.",
+      "file_path": "guide/base/best-practices-general.md",
+      "kind": "text",
+      "mtime": 1785274566569393,
+      "hash": "8cb0dc3eeb03fb26c25d78d858f6e71234d9e0e70dac105cc8613c129e4655c9"
+    },
+    "samples/ipc-socket-design/src/ipc/mod.rs": {
+      "when_to_use": "Include when working with or importing IPC transport mechanisms in the application.",
+      "summary": "Root module for the IPC layer, declaring available transport submodules such as the socket transport.",
+      "file_path": "samples/ipc-socket-design/src/ipc/mod.rs",
+      "kind": "text",
+      "hash": "7e2080400b29d87ce6929a4efc41d10b57776f41ce891bb355e0a970f64f1c10",
+      "mtime": 1785357409866378,
+      "public_types": [],
+      "public_functions": []
+    },
+    "samples/ipc-socket-design/src/ipc/socket/wire.rs": {
+      "when_to_use": "Include when working with IPC socket serialization, custom framing protocols, or reading/writing length-delimited asynchronous byte stream messages.",
+      "summary": "Implements length-delimited framing over async byte streams using little-endian u32 length prefixes and postcard serialization.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/wire.rs",
+      "kind": "text",
+      "hash": "c7cab80fa7b9c0cd38fae8d7cb67276ad06185ee65a12545db008a242964098d",
+      "mtime": 1785537549455426,
+      "public_types": [
+        "MAX_FRAME_LEN"
+      ],
+      "public_functions": [
+        "write_frame",
+        "read_frame"
+      ]
+    },
+    "guide/base/pattern-fluid-and-builder.md": {
+      "when_to_use": "Include this guide when implementing fluid constructors, chainable setters on structs, or separate Builder structs for complex and fallible type construction.",
+      "summary": "Rust guide covering conventions for fluid APIs, chainable struct methods, and the Builder pattern for complex or fallible object construction.",
+      "file_path": "guide/base/pattern-fluid-and-builder.md",
+      "kind": "text",
+      "mtime": 1784051303748858,
+      "hash": "8175a3db66b1fa8441fbf44142e15cb3aacc57ad739811f0ba038bf47ea876be"
+    },
+    "guide/base/best-practices-documentation.md": {
+      "when_to_use": "Include this file when setting up project documentation structures, writing Rust module or crate docs, or organizing documentation for LLM consumption.",
+      "summary": "Best practices guide for Rust project documentation, detailing the separation of human-facing documentation (using Markdown files included via `include_str!`) and LLM-optimized documentation.",
+      "file_path": "guide/base/best-practices-documentation.md",
+      "kind": "text",
+      "mtime": 1782316188486837,
+      "hash": "dfb4b049f4368a2c384058856cf56fd5e8af9960412b90b10f0500390efd2e6e"
+    },
+    "pack.toml": {
+      "when_to_use": "Include this file when configuring, building, or referencing the metadata and properties of the 'rust10x' pack.",
+      "summary": "Configuration file for the 'rust10x' pack, defining metadata such as namespace, name, version, license, homepage, repository, and author.",
+      "file_path": "pack.toml",
+      "kind": "text",
+      "mtime": 1785207757048763,
+      "hash": "e84f8a182e680ed3409727aed08737f90d470bdbc46db425ad488323cb55e985"
+    },
+    "samples/ipc-socket-design/src/app/client.rs": {
+      "when_to_use": "Include this file when working with the application client implementation, API method calls over IPC, or service request handling.",
+      "summary": "Application-level typed client facade over the generic IPC socket client, implementing business logic operations.",
+      "file_path": "samples/ipc-socket-design/src/app/client.rs",
+      "kind": "text",
+      "hash": "752c0736431cc63817374dce015edb948b4ceb3dd3edd369c38558c93c180c70",
+      "mtime": 1785358534416812,
+      "public_types": [
+        "Client"
+      ],
+      "public_functions": [
+        "Client::connect",
+        "Client::label",
+        "Client::add",
+        "Client::multiply",
+        "Client::counter_incr",
+        "Client::counter_get"
+      ]
+    },
+    "samples/ipc-socket-design/src/app/server.rs": {
+      "when_to_use": "Use when working with the server-side IPC request handling, shared state management, or adding new server-handled calls.",
+      "summary": "Implements the application service logic, including shared counter state and the RequestHandler implementation for processing IPC calls.",
+      "file_path": "samples/ipc-socket-design/src/app/server.rs",
+      "kind": "text",
+      "mtime": 1785357409877940,
+      "public_types": [
+        "Server"
+      ],
+      "hash": "f04da585c32b2f378f79b23593cb25157c2015fd427c81a91fdac98136e7ca9c"
+    },
+    "samples/ipc-socket-design/src/ipc/socket/mod.rs": {
+      "when_to_use": "Include this file when working with IPC socket transport plumbing, client/server transports, envelopes, or request handlers for the Unix domain socket implementation.",
+      "summary": "Unix domain socket transport module providing length-delimited postcard frames with request/response correlation over multiplexed connections.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/mod.rs",
+      "kind": "text",
+      "mtime": 1785357409873065,
+      "hash": "04a4411a4fd385530523593a1d8be645d23da77a46f076fb9b0ed1b44466dd5f"
+    },
+    "samples/event-design/src/event_base/event_base_error.rs": {
+      "when_to_use": "Include this file when handling errors from event-base channel operations, checking channel disconnections, or working with `EventBaseResult`.",
+      "summary": "Defines error types and results for event-base channel operations, including invalid capacity and peer disconnection errors.",
+      "file_path": "samples/event-design/src/event_base/event_base_error.rs",
+      "kind": "text",
+      "mtime": 1785206381604124,
+      "public_types": [
+        "EventBaseResult",
+        "EventBaseError"
+      ],
+      "hash": "cf3a0c0cb0a56c2dc954c79454796dac50d559d4e3bebc7cc8a3a1eb486cb36a"
+    },
+    "guide/base/best-practices-cli.md": {
+      "when_to_use": "Include this guide when implementing or refactoring command-line interfaces, organizing src/cli/ and src/handlers/ modules, or setting up Clap parsers and executors.",
+      "summary": "Guidelines and best practices for structuring CLI applications in Rust10x, ensuring separation between CLI parsing (Clap) and domain logic (handlers).",
+      "file_path": "guide/base/best-practices-cli.md",
+      "kind": "text",
+      "mtime": 1768803554692445,
+      "hash": "1c9d823dfa7e54b6cacf12f352d753901d2740459667d31286d89e868115901e"
+    },
+    "guide/base/best-practices-cargo.md": {
+      "when_to_use": "Include this file when creating, updating, or reviewing Cargo.toml configuration and dependency management conventions.",
+      "summary": "Guidelines and best practices for structuring Cargo.toml files, managing dependencies by categorized sections, and configuring rust lints and resolvers.",
+      "file_path": "guide/base/best-practices-cargo.md",
+      "kind": "text",
+      "mtime": 1785426600968100,
+      "hash": "a73df51a2bd758371676c1e0513b4e01424b39c5193f8dff04f42a4f1438da3d"
+    },
+    "samples/event-design/src/main.rs": {
+      "when_to_use": "Include this file when understanding how the different modules (event_base, mock_aijob, mock_tui) are wired together and executed as an asynchronous Tokio application.",
+      "summary": "Main entry point for the event-design sample application, orchestrating the execution of both the TUI event demo and the AI job queue demo concurrently using Tokio.",
+      "file_path": "samples/event-design/src/main.rs",
+      "kind": "text",
+      "mtime": 1785207315532031,
+      "hash": "55c434dcb25d1498942f9d558e14741a47d4231bdf7a1ca00cb61f75cdb4eea3",
+      "public_functions": [
+        "main"
+      ]
+    },
+    "samples/event-design/src/event_base/common.rs": {
+      "when_to_use": "Include this file when you need access to shared configuration constants or default values for event channels.",
+      "summary": "Defines common constants used across the event-design sample package, such as default channel capacities.",
+      "file_path": "samples/event-design/src/event_base/common.rs",
+      "kind": "text",
+      "hash": "fc2c77b75ca301d08a3c6c8bb5850a1e774f5a2a637f26edff3334b3d4aa36c2",
+      "mtime": 1785271872903924,
+      "public_types": [],
+      "public_functions": []
+    },
+    "samples/event-design/src/mock_aijob/ai_queue.rs": {
+      "when_to_use": "Use when you need to mock an asynchronous AI job processing queue or reference an MPMC channel-based worker pattern in the event-design sample.",
+      "summary": "Implements a mock AI job queue using bounded MPMC channels with support for queuing jobs, receiving jobs, and running a demonstration producer-worker simulation.",
+      "file_path": "samples/event-design/src/mock_aijob/ai_queue.rs",
+      "kind": "text",
+      "hash": "e0e29234856e3a1530cf4bd7a66e4afe024d5a75d35fbf3881ad952b6c8a9459",
+      "mtime": 1785207331182534,
+      "public_types": [
+        "AiJob",
+        "AiQueue"
+      ],
+      "public_functions": [
+        "run_demo"
+      ]
+    },
+    "samples/event-design/Cargo.toml": {
+      "when_to_use": "Use this file when checking project dependencies, package metadata, Rust edition, or lint configurations for the event-base-sample crate.",
+      "summary": "Rust package configuration file for the event-base-sample project, defining dependencies like tokio, futures, crossfire, and derive_more, alongside strict unsafe code lints.",
+      "file_path": "samples/event-design/Cargo.toml",
+      "kind": "text",
+      "mtime": 1785207373410095,
+      "hash": "24175941a4a3b66e603c8ef0bfac7d5987a14730fb86d0e79c4e3fd1b6c6c039"
+    },
+    "samples/event-design/src/mock_aijob/mod.rs": {
+      "when_to_use": "Include this file when working with the mock_aijob module structure or when needing to access the ai_queue submodule within the event-design sample.",
+      "summary": "Module declaration file for the mock_aijob module, exposing the ai_queue submodule.",
+      "file_path": "samples/event-design/src/mock_aijob/mod.rs",
+      "kind": "text",
+      "hash": "6b3f76ef04aa688383f90ce19f1fe1b9ac279c52b4efe477fe69f3f0e40ca920",
+      "mtime": 1785207084947389,
+      "public_types": [],
+      "public_functions": []
+    },
+    "samples/ipc-socket-design/src/main.rs": {
+      "when_to_use": "Include when examining the integration, lifecycle management, or usage example of the IPC server and client components.",
+      "summary": "Main entry point for the IPC socket design sample application, demonstrating concurrent client requests over a Unix domain socket server using Tokio.",
+      "file_path": "samples/ipc-socket-design/src/main.rs",
+      "kind": "text",
+      "hash": "84aff396d4e0ed5781afdc8e778cf729d99aa6960392a368a795e17b2ac4bd27",
+      "mtime": 1785358548652631,
+      "public_types": [
+        "Error",
+        "Result"
+      ],
+      "public_functions": [
+        "main"
+      ]
+    },
+    "samples/ipc-socket-design/src/ipc/socket/server_transport.rs": {
+      "when_to_use": "Include this file when working on the IPC server logic, handling incoming Unix domain socket connections, or configuring request/response dispatching.",
+      "summary": "Implements the server-side IPC transport, including socket binding, the accept loop, connection handling, concurrent request execution, and serialized response writing.",
+      "file_path": "samples/ipc-socket-design/src/ipc/socket/server_transport.rs",
+      "kind": "text",
+      "hash": "da1b4e97ddecdd129a05d173a0dbaa27858fdb1a8420f5937a3e85237334757c",
+      "mtime": 1785537467448329,
+      "public_types": [
+        "ServerListener"
+      ],
+      "public_functions": [
+        "unlink_if_exists"
+      ]
+    }
+  }
+}
