@@ -37,7 +37,7 @@ fn new_codec() -> LengthDelimitedCodec {
 		.little_endian()
 		.length_adjustment(0)
 		.num_skip(4)
-	.max_frame_length(MAX_FRAME_LEN as usize)
+		.max_frame_length(MAX_FRAME_LEN as usize)
 		.new_codec()
 }
 
@@ -300,15 +300,9 @@ mod tests {
 
 		// -- Exec
 		request_writer.write_frame(&request).await?;
-		let actual_request = request_reader
-			.read_frame()
-			.await?
-			.ok_or("missing request frame")?;
+		let actual_request = request_reader.read_frame().await?.ok_or("missing request frame")?;
 		response_writer.write_frame(&response).await?;
-		let actual_response = response_reader
-			.read_frame()
-			.await?
-			.ok_or("missing response frame")?;
+		let actual_response = response_reader.read_frame().await?.ok_or("missing response frame")?;
 
 		// -- Check
 		assert_eq!(actual_request.id, request.id);

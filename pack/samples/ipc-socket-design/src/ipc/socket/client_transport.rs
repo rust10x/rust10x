@@ -13,8 +13,7 @@ use std::marker::PhantomData;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::net::UnixStream;
-use tokio::net::unix::OwnedReadHalf;
-use tokio::net::unix::OwnedWriteHalf;
+use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::{Mutex as AsyncMutex, oneshot};
 use tokio::task::JoinHandle;
 
@@ -111,7 +110,11 @@ impl<M, R> Drop for ClientConnection<M, R> {
 
 // region:    --- Support
 
-fn spawn_reader<R>(label: String, mut reader: WireReader<OwnedReadHalf, Response<R>>, pending: Pending<R>) -> JoinHandle<()>
+fn spawn_reader<R>(
+	label: String,
+	mut reader: WireReader<OwnedReadHalf, Response<R>>,
+	pending: Pending<R>,
+) -> JoinHandle<()>
 where
 	R: DeserializeOwned + Send + 'static,
 {
@@ -119,10 +122,7 @@ where
 		loop {
 			match reader.read_frame().await {
 				Ok(Some(response)) => {
-					let res_tx = pending
-						.lock()
-						.ok()
-						.and_then(|mut pending| pending.remove(&response.id));
+					let res_tx = pending.lock().ok().and_then(|mut pending| pending.remove(&response.id));
 
 					match res_tx {
 						Some(res_tx) => {
