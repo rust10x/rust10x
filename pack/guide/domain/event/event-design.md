@@ -7,11 +7,12 @@ The goal of this design is to provide a channel-normalization API independent of
 The design has three levels:
 
 ```mermaid
-flowchart LR
-    Backend["Channel backend<br /><small>Crossfire</small>"] --> L1["Level 1<br /><small>event-base facade</small>"]
-    L1 --> L2["Level 2<br /><small>use-case endpoint aliases</small>"]
-    L2 --> L3["Level 3<br /><small>domain types</small>"]
-    L3 --> App["Application code"]
+block-beta
+    columns 20
+
+    L3["Level 3<br/>(Type Wrap)"]:4 space:16
+    L2["Level 2<br/>(Type Alias)"]:8 space:12
+    L1["Level 1<br/>(Lib Wrap)"]:12 space:8
 ```
 
 - **Level 1**, normalizes all xPxC topologies from the selected backend
