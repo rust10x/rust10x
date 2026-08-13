@@ -19,15 +19,15 @@ block-beta
   - It provides endpoint pairs such as `MpscTx<M>` / `MpscRx<M>`, `MpmcTx<M>` / `MpmcRx<M>`, and `SpscTx<M>` / `SpscRx<M>`. (could be in path `src/event_base/`)
 - **Level 2**, defines type aliases, or thin type wrappers when needed, over Level 1 for a particular use case.
   - For example, `type TuiTx = MpscTx<TuiEvent>` and `type TuiRx = MpscRx<TuiEvent>` retain the same `.send(...)` and `.recv(...)` API. (could be in path `src/tui/event.rs`)
-- **Level 3**, defines domain types with domain functions.
-  - For example, `JobQueue<Job>` can expose `JobQueue::get_job_todo(...)` instead of raw receiver operations.
+- **Level 3**, defines domain types and capability-specific domain endpoints with domain functions.
+  - For example, `AiJobTx` can expose `exec_request(...)`, while `AiJobRx` exposes `next_request()` instead of raw channel operations.
 
 This separation keeps channel implementation details out of domain code while allowing infrastructure to select the correct producer and consumer topology for each workflow.
 
-Application code may depend on Level 2 or Level 3. 
+Application code may depend on Level 2 or Level 3.
 
 - Use Level 2 when the call site is a plain send or receive of a use-case event. 
-- Use Level 3 when the domain type would benefit of a more specific api than generic `.send(..)` and `.recv(...)`
+- Use Level 3 when the domain would benefit from capability-specific types or a more specific API than generic `.send(..)` and `.recv(...)`.
 
 > Note: We have standardized on [crossfire](https://crates.io/crates/crossfire) as the channel backend because it is one of the best in its class, but this architecture allows the backend to be swapped as desired.
 
@@ -126,41 +126,48 @@ Aliases give three benefits:
 - Signatures name the use case, `fn spawn_input_reader(tui_tx: TuiTx)` rather than `fn spawn_input_reader(tx: MpscTx<TuiEvent>)`.
 - The channel name and capacity are set by a single constructor instead of at each construction site.
 
-Use a newtype wrapper instead of an alias only when the use case must restrict or adapt the endpoint API, for example to expose only `send`, or to convert an incoming value into the channel message type. A wrapper still delegates to the Level 1 endpoint, it must not construct backend channels or translate backend errors.
+Use Level 3 endpoint newtypes when the use case needs domain-specific operation names or capability boundaries instead of the generic endpoint API. A Level 2 adapter newtype remains appropriate when it only restricts or adapts the generic channel API without introducing domain behavior. Both forms delegate to Level 1 endpoints and must not construct backend channels or translate backend errors.
 
 ## Level 3: Domain Types
 
-Level 3 turns channels into domain components. A domain type owns its Level 2 endpoints and exposes functions named after business operations rather than channel operations.
+Level 3 turns channels into domain components. It may expose a coordinating domain type, or separate capability-specific endpoint types when producers and consumers should not receive both channel capabilities.
 
 ```mermaid
 flowchart LR
-    Producer["Job producer"] --> Queue["JobQueue&lt;J&gt;<br /><small>Level 3 domain type</small>"]
-    Queue --> Endpoints["JobTx / JobRx<br /><small>Level 2 aliases</small>"]
-    Endpoints --> Base["Level 1 MPMC endpoint"]
-    Queue --> Worker["Job worker"]
+    Producer["AI job producer"] --> Tx["AiJobTx<br /><small>Level 3 send capability</small>"]
+    Tx --> Base["Level 1 MPMC channel"]
+    Base --> Rx["AiJobRx<br /><small>Level 3 receive capability</small>"]
+    Rx --> Worker["AI job worker"]
 ```
 
-For example, a job-processing domain may define a `JobQueue<J>` over an MPMC channel and expose only the operations producers and workers need.
+For example, an AI job domain can wrap each Level 1 endpoint separately. The constructor returns distinct values, so a producer receives only `AiJobTx` and a worker receives only `AiJobRx`.
 
 ```rust
-pub struct JobQueue<J: Job> {
-	job_tx: JobTx<J>,
-	job_rx: JobRx<J>,
+#[derive(Clone)]
+pub struct AiJobTx {
+	inner: MpmcTx<AiJob>,
 }
 
-impl<J: Job> JobQueue<J> {
-	pub fn new(name: &'static str) -> EventBaseResult<Self> {
-		let (job_tx, job_rx) = new_mpmc_bounded::<J>(name, JOB_QUEUE_CAPACITY)?;
-		Ok(Self { job_tx, job_rx })
+impl AiJobTx {
+	pub async fn exec_request(&self, job: AiJob) -> EventBaseResult<()> {
+		self.inner.send(job).await
 	}
+}
 
-	pub async fn queue_job(&self, job: J) -> EventBaseResult<()> {
-		self.job_tx.send(job).await
-	}
+#[derive(Clone)]
+pub struct AiJobRx {
+	inner: MpmcRx<AiJob>,
+}
 
-	pub async fn get_job_todo(&self) -> EventBaseResult<J> {
-		self.job_rx.recv().await
+impl AiJobRx {
+	pub async fn next_request(&self) -> EventBaseResult<AiJob> {
+		self.inner.recv().await
 	}
+}
+
+pub fn new_ai_job_channel() -> EventBaseResult<(AiJobTx, AiJobRx)> {
+	let (tx, rx) = new_mpmc_bounded("ai-jobs", JOB_QUEUE_CAPACITY)?;
+	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
 }
 ```
 
@@ -169,12 +176,13 @@ impl<J: Job> JobQueue<J> {
 A Level 3 type should:
 
 - Name each operation after the business concept, `queue_job` and `get_job_todo` rather than `send` and `recv`.
-- Own the Level 2 endpoints it needs, including coordination across several channels.
+- Expose separate endpoint capabilities when producers should only send and consumers should only receive.
+- Own the Level 1 or Level 2 endpoints it needs, including coordination across several channels.
 - Hold the domain state or policy, such as capacity defaults, filtering, or reply routing.
 - Attach a oneshot reply endpoint to a request when the caller needs exactly one result.
 - Preserve Level 1 shutdown and error semantics unless the domain has a clear reason to add context.
 
-A Level 3 type should not duplicate backend construction, translate backend errors directly, or expose backend endpoint types. Those responsibilities belong to Level 1 and Level 2.
+A Level 3 type should not duplicate backend construction, translate backend errors directly, or expose backend endpoint types. Channel construction and error translation belong to Level 1. A Level 3 constructor may select a Level 1 factory, channel name, and domain capacity while returning domain-owned wrappers.
 
 ### Choosing the Topology
 
@@ -185,7 +193,7 @@ Use the ownership model of the use case to select its Level 1 primitive, then re
 - A dedicated pipeline stage connected to exactly one downstream stage is an SPSC channel.
 - A request that requires exactly one result uses a oneshot channel.
 
-Because the alias and its constructor are the only place the topology appears, a workload can move from MPSC to MPMC without changing Level 3 or application code.
+Because the Level 2 alias or Level 3 endpoint wrapper is the only place the topology appears, a workload can move from MPSC to MPMC without changing application code.
 
 ## Implementation Reference
 
@@ -210,4 +218,4 @@ handbook/samples/event-design/src/event_base/
 - `event_xpxc.rs` owns long-lived multi-producer and multi-consumer endpoint behavior.
 - `mod.rs` keeps implementation modules private and re-exports the public facade.
 
-Use the sample as the implementation reference when adding operations or a new backend topology. Level 2 aliases and Level 3 domain types live in their own domain modules, not in `event_base`. Keep this guide focused on the architectural boundary and ownership model.
+Use the sample as the implementation reference when adding operations or a new backend topology. Level 2 aliases and Level 3 domain types, including capability-specific endpoint wrappers, live in their own domain modules, not in `event_base`. Keep this guide focused on the architectural boundary and ownership model.

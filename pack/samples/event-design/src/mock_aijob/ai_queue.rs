@@ -2,9 +2,6 @@ use crate::event_base::{EventBaseResult, MpmcRx, MpmcTx, new_mpmc_bounded};
 use tokio::time::{Duration, sleep};
 use tokio::try_join;
 
-type AiJobTx = MpmcTx<AiJob>;
-type AiJobRx = MpmcRx<AiJob>;
-
 #[derive(Debug)]
 pub struct AiJob {
 	pub id: u64,
@@ -12,47 +9,53 @@ pub struct AiJob {
 }
 
 #[derive(Clone)]
-pub struct AiQueue {
-	job_tx: AiJobTx,
-	job_rx: AiJobRx,
+pub struct AiJobTx {
+	inner: MpmcTx<AiJob>,
 }
 
-impl AiQueue {
-	pub fn new() -> EventBaseResult<Self> {
-		let (job_tx, job_rx) = new_mpmc_bounded("mock-ai-jobs", 8)?;
-		Ok(Self { job_tx, job_rx })
+impl AiJobTx {
+	pub async fn exec_request(&self, job: AiJob) -> EventBaseResult<()> {
+		self.inner.send(job).await
 	}
+}
 
-	pub async fn queue_job(&self, job: AiJob) -> EventBaseResult<()> {
-		self.job_tx.send(job).await
-	}
+#[derive(Clone)]
+pub struct AiJobRx {
+	inner: MpmcRx<AiJob>,
+}
 
-	pub async fn get_job_todo(&self) -> EventBaseResult<AiJob> {
-		self.job_rx.recv().await
+impl AiJobRx {
+	pub async fn next_request(&self) -> EventBaseResult<AiJob> {
+		self.inner.recv().await
 	}
+}
+
+pub fn new_ai_job_channel() -> EventBaseResult<(AiJobTx, AiJobRx)> {
+	let (tx, rx) = new_mpmc_bounded("mock-ai-jobs", 8)?;
+	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
 }
 
 pub async fn run_demo() -> EventBaseResult<()> {
-	let queue = AiQueue::new()?;
-	try_join!(simulate_producer(queue.clone()), simulate_worker(queue))?;
+	let (job_tx, job_rx) = new_ai_job_channel()?;
+	try_join!(simulate_producer(job_tx), simulate_worker(job_rx))?;
 	Ok(())
 }
 
 // region:    --- Support
 
-async fn simulate_producer(queue: AiQueue) -> EventBaseResult<()> {
+async fn simulate_producer(job_tx: AiJobTx) -> EventBaseResult<()> {
 	for id in 1..=3 {
 		let prompt = format!("demo prompt {id}");
 		println!("[ai producer] queued job {id}");
-		queue.queue_job(AiJob { id, prompt }).await?;
+		job_tx.exec_request(AiJob { id, prompt }).await?;
 	}
 
 	Ok(())
 }
 
-async fn simulate_worker(queue: AiQueue) -> EventBaseResult<()> {
+async fn simulate_worker(job_rx: AiJobRx) -> EventBaseResult<()> {
 	for _ in 0..3 {
-		let job = queue.get_job_todo().await?;
+		let job = job_rx.next_request().await?;
 		println!("[ai worker] processing job {}", job.id);
 		sleep(Duration::from_millis(150)).await;
 		println!("[ai worker] completed: {}", job.prompt);
