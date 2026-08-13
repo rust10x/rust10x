@@ -8,6 +8,13 @@ pub struct AiJob {
 	pub prompt: String,
 }
 
+pub fn new_ai_job_channel() -> EventBaseResult<(AiJobTx, AiJobRx)> {
+	let (tx, rx) = new_mpmc_bounded("mock-ai-jobs", 8)?;
+	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
+}
+
+// region:    --- AiJobTx
+
 #[derive(Clone)]
 pub struct AiJobTx {
 	inner: MpmcTx<AiJob>,
@@ -18,6 +25,10 @@ impl AiJobTx {
 		self.inner.send(job).await
 	}
 }
+
+// endregion: --- AiJobTx
+
+// region:    --- AiJobRx
 
 #[derive(Clone)]
 pub struct AiJobRx {
@@ -30,10 +41,7 @@ impl AiJobRx {
 	}
 }
 
-pub fn new_ai_job_channel() -> EventBaseResult<(AiJobTx, AiJobRx)> {
-	let (tx, rx) = new_mpmc_bounded("mock-ai-jobs", 8)?;
-	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
-}
+// endregion: --- AiJobRx
 
 pub async fn run_demo() -> EventBaseResult<()> {
 	let (job_tx, job_rx) = new_ai_job_channel()?;
