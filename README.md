@@ -50,3 +50,8 @@ knowledge_globs:
 ```
 
 This uses the `rust10x` code map provider.
+
+
+--- 
+
+[This Repo](https://github.com/rust10x/rust10x)
