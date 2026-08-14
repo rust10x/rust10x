@@ -1,29 +1,52 @@
-# Rust10x
+# rust10x
 
-This repo contains Rust best practices, code design principles, and patterns for production Rust code.
+rust10x is an evolving knowledge base for production-grade Rust development. It is structured and optimized for both human developers and AI coding agents.
 
-This is mostly maintained by [Jeremy Chone](https://youtube.com/jeremychone).
+## Structure
 
-Feel free to fork and use it as you see fit.
+All content is organized under the `pack/` directory:
 
-## Licensing
+- `pack/guide/base/`: Core Rust best practices, conventions, and design patterns.
+- `pack/guide/domain/`: Domain-specific practices, patterns, and architectures.
+- `pack/samples/`: Self-contained, compilable micro-projects demonstrating specific design patterns in focused codebases.
+- `pack/code-map.json`: A content map indexing all pack files, structured for use by automated context engines and AI coding harnesses such as AIPack and pro@coder.
 
-This whole repo is licensed as MIT or Apache license. 
+## AI and Agent Integration
 
-Feel free to use this content as you see fit, for commercial or personal use. 
+The `pack/` directory is designed to be provided directly to AI assistants. Agents can reference the structured guides, compilable sample projects, and the code map during planning and code generation to produce idiomatic, production-grade Rust.
 
-Also, for fully transparency, the idea, it to have `https://rust10x.com` will become a rust learning platform which take a lot from this content.
+## Using with AIPack / pro@coder
 
-## Contributions
+For those brave enough to use the AIPack and `pro@coder` coding harnesses:
 
-Contributions are welcome. To help keep reviews focused and efficient, please open an issue for substantial proposals before starting work, keep pull requests scoped to a single improvement, and include enough context for maintainers to understand the change.
+Install [aipack](https://aipack.ai)
 
-Unless explicitly stated otherwise, contributions are accepted under the same MIT or Apache-2.0 terms as the rest of the repository.
+```
+aip install pro@rust10x
+```
 
-## Note on AIPack `pro@rust10x`
+Then, in the pro@coder `coder-prompt.md`, you can have pro@coder generate the code map.
 
-The `handbook/` folder is deployed as the `pro@rust10x` AI Pack and replaces the content in the [AIPack packs-pro](https://github.com/aipack-ai/packs-pro) repo.
+```yaml
+knowledge_globs: 
+  - pro@rust10x/guide/**/*.md    # to get the markdown guides
+  - pro@rust10x/samples/**/*.*  # to get the sample code
 
----
+auto_context: 
+  model: luna            # Medium/Cheap model enough on this one (gpt-5.6-luna good choice)
+  code_map_model: lite   # Small/fast to code map each file (gemini flash lite the best for this)
+  input_concurrency: 32  # (default 8)
+  # enabled: false       # (default true)
 
-[This Repo](https://github.com/rust10x/rust10x)
+model: luna-xhigh
+```
+
+
+Alternatively, you can point directly to the embedded code map:
+
+```yaml
+knowledge_globs: 
+  - pro@rust10x/code-map.json
+```
+
+This uses the `rust10x` code map provider.
