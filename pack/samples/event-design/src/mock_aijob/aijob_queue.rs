@@ -1,5 +1,5 @@
 use super::aijob_error::{AiJobError, AiJobResult};
-use crate::event_base::{EventBaseError, MpmcRx, MpmcTx, new_mpmc_bounded};
+use crate::event_base::{EventBaseError, MpscRx, MpscTx, new_mpsc_bounded};
 use tokio::time::{Duration, sleep};
 use tokio::try_join;
 
@@ -10,7 +10,7 @@ pub struct AiJob {
 }
 
 pub fn new_ai_job_channel() -> AiJobResult<(AiJobTx, AiJobRx)> {
-	let (tx, rx) = new_mpmc_bounded("mock-ai-jobs", 8).map_err(map_event_base_error)?;
+	let (tx, rx) = new_mpsc_bounded("mock-ai-jobs", 8).map_err(map_event_base_error)?;
 	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
 }
 
@@ -18,7 +18,7 @@ pub fn new_ai_job_channel() -> AiJobResult<(AiJobTx, AiJobRx)> {
 
 #[derive(Clone)]
 pub struct AiJobTx {
-	inner: MpmcTx<AiJob>,
+	inner: MpscTx<AiJob>,
 }
 
 impl AiJobTx {
@@ -31,13 +31,12 @@ impl AiJobTx {
 
 // region:    --- AiJobRx
 
-#[derive(Clone)]
 pub struct AiJobRx {
-	inner: MpmcRx<AiJob>,
+	inner: MpscRx<AiJob>,
 }
 
 impl AiJobRx {
-	pub async fn next_request(&self) -> AiJobResult<AiJob> {
+	pub async fn next_request(&mut self) -> AiJobResult<AiJob> {
 		self.inner.recv().await.map_err(map_event_base_error)
 	}
 }
@@ -62,7 +61,7 @@ async fn simulate_producer(job_tx: AiJobTx) -> crate::Result<()> {
 	Ok(())
 }
 
-async fn simulate_worker(job_rx: AiJobRx) -> crate::Result<()> {
+async fn simulate_worker(mut job_rx: AiJobRx) -> crate::Result<()> {
 	for _ in 0..3 {
 		let job = job_rx.next_request().await?;
 		println!("[ai worker] processing job {}", job.id);
@@ -92,6 +91,25 @@ mod tests {
 	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 	use super::*;
+
+	#[tokio::test]
+	async fn test_mock_aijob_send_and_receive() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_ai_job_channel()?;
+		let job = AiJob {
+			id: 1,
+			prompt: String::from("test prompt"),
+		};
+
+		// -- Exec
+		tx.exec_request(job).await?;
+		let received = rx.next_request().await?;
+
+		// -- Check
+		assert_eq!(received.id, 1);
+		assert_eq!(received.prompt, "test prompt");
+		Ok(())
+	}
 
 	#[test]
 	fn test_mock_aijob_map_event_base_error_disconnected() -> Result<()> {
