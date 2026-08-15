@@ -59,33 +59,6 @@ impl<T: Send + 'static> std::fmt::Debug for MpmcTx<T> {
 	}
 }
 
-// endregion: --- MpmcTx Implementations
-
-// region:    --- MpmcRx Implementations
-
-/// MpMc MultiConsumer receiver. Clonable, allowing multiple consumers.
-pub struct MpmcRx<T: Send + 'static> {
-	pub(super) inner: MAsyncRx<mpmc::Array<T>>,
-	pub(super) name: &'static str,
-}
-
-// Implemented manually because deriving Clone can unnecessarily require T: Clone,
-// while cloning a channel handle does not clone its queued messages.
-impl<T: Send + 'static> Clone for MpmcRx<T> {
-	fn clone(&self) -> Self {
-		Self {
-			inner: self.inner.clone(),
-			name: self.name,
-		}
-	}
-}
-
-impl<T: Send + 'static> std::fmt::Debug for MpmcRx<T> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("MpmcRx").field("name", &self.name).finish()
-	}
-}
-
 impl<T> MpmcTx<T>
 where
 	T: Send + 'static,
@@ -149,6 +122,33 @@ where
 
 			Err(TrySendError::Disconnected(_)) => Err(EventBaseError::TxDisconnected { name: self.name }),
 		}
+	}
+}
+
+// endregion: --- MpmcTx Implementations
+
+// region:    --- MpmcRx Implementations
+
+/// MpMc MultiConsumer receiver. Clonable, allowing multiple consumers.
+pub struct MpmcRx<T: Send + 'static> {
+	pub(super) inner: MAsyncRx<mpmc::Array<T>>,
+	pub(super) name: &'static str,
+}
+
+// Implemented manually because deriving Clone can unnecessarily require T: Clone,
+// while cloning a channel handle does not clone its queued messages.
+impl<T: Send + 'static> Clone for MpmcRx<T> {
+	fn clone(&self) -> Self {
+		Self {
+			inner: self.inner.clone(),
+			name: self.name,
+		}
+	}
+}
+
+impl<T: Send + 'static> std::fmt::Debug for MpmcRx<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("MpmcRx").field("name", &self.name).finish()
 	}
 }
 
@@ -249,7 +249,12 @@ mod tests {
 		let error = rx.recv().await;
 
 		// -- Check
-		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "mpmc-disconnect-test" })));
+		assert!(matches!(
+			error,
+			Err(EventBaseError::RxDisconnected {
+				name: "mpmc-disconnect-test"
+			})
+		));
 		assert!(rx.is_disconnected());
 		Ok(())
 	}

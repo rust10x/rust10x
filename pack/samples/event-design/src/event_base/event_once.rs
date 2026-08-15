@@ -3,7 +3,7 @@
 use crate::event_base::event_base_error::{EventBaseError, EventBaseResult};
 use crossfire::{TryRecvError, oneshot};
 
-// region:    --- Factory Functions
+// region:    --- Factories
 
 /// Creates a single-use asynchronous channel.
 ///
@@ -14,9 +14,9 @@ pub fn new_once<T>(name: &'static str) -> (OnceTx<T>, OnceRx<T>) {
 	(OnceTx { inner: tx, name }, OnceRx { inner: rx, name })
 }
 
-// endregion: --- Factory Functions
+// endregion: --- Factories
 
-// region:    --- Implementation OnceTx<T>
+// region:    --- OnceTx Implementations
 
 /// Single-use producer, consumed on send.
 pub struct OnceTx<T> {
@@ -47,9 +47,9 @@ impl<T> OnceTx<T> {
 	}
 }
 
-// endregion: --- Implementation OnceTx<T>
+// endregion: --- OnceTx Implementations
 
-// region:    --- Implementation OnceRx<T>
+// region:    --- OnceRx Implementations
 
 /// Single-use consumer, consumed on recv.
 pub struct OnceRx<T> {
@@ -95,7 +95,7 @@ impl<T> OnceRx<T> {
 	}
 }
 
-// endregion: --- Implementation OnceRx<T>
+// endregion: --- OnceRx Implementations
 
 // region:    --- Tests
 

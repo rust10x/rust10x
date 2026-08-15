@@ -4,7 +4,7 @@ use crate::event_base::event_base_error::EventBaseResult;
 use crate::event_base::{DEFAULT_CAPACITY, EventBaseError, support};
 use crossfire::{AsyncRx, AsyncTx, Rx, TryRecvError, Tx, spsc};
 
-// region:    --- Fatories
+// region:    --- Factories
 
 /// Creates a bounded asynchronous SPSC channel with [`DEFAULT_CAPACITY`].
 ///
@@ -32,9 +32,9 @@ where
 	Ok((SpscTx { inner: tx, name }, SpscRx { inner: rx, name }))
 }
 
-// endregion: --- Fatories
+// endregion: --- Factories
 
-// region:    --- Async Spsc Implementations
+// region:    --- SpscTx Implementations
 
 /// SpSc SingleProducer sender. Not clonable.
 pub struct SpscTx<T: Send + 'static> {
@@ -45,18 +45,6 @@ pub struct SpscTx<T: Send + 'static> {
 impl<T: Send + 'static> std::fmt::Debug for SpscTx<T> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("SpscTx").field("name", &self.name).finish()
-	}
-}
-
-/// SpSc SingleConsumer receiver. Not clonable.
-pub struct SpscRx<T: Send + 'static> {
-	pub(super) inner: AsyncRx<spsc::Array<T>>,
-	pub(super) name: &'static str,
-}
-
-impl<T: Send + 'static> std::fmt::Debug for SpscRx<T> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("SpscRx").field("name", &self.name).finish()
 	}
 }
 
@@ -104,6 +92,22 @@ where
 			inner: sync_tx,
 			name: self.name,
 		}
+	}
+}
+
+// endregion: --- SpscTx Implementations
+
+// region:    --- SpscRx Implementations
+
+/// SpSc SingleConsumer receiver. Not clonable.
+pub struct SpscRx<T: Send + 'static> {
+	pub(super) inner: AsyncRx<spsc::Array<T>>,
+	pub(super) name: &'static str,
+}
+
+impl<T: Send + 'static> std::fmt::Debug for SpscRx<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("SpscRx").field("name", &self.name).finish()
 	}
 }
 
@@ -155,9 +159,9 @@ where
 	}
 }
 
-// endregion: --- Async Spsc Implementations
+// endregion: --- SpscRx Implementations
 
-// region:    --- Sync Spsc Implementations
+// region:    --- SyncSpscTx Implementations
 
 /// SpSc synchronous single-producer sender. Not clonable.
 pub struct SyncSpscTx<T: Send + 'static> {
@@ -168,18 +172,6 @@ pub struct SyncSpscTx<T: Send + 'static> {
 impl<T: Send + 'static> std::fmt::Debug for SyncSpscTx<T> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("SyncSpscTx").field("name", &self.name).finish()
-	}
-}
-
-/// SpSc synchronous single-consumer receiver. Not clonable.
-pub struct SyncSpscRx<T: Send + 'static> {
-	pub(super) inner: Rx<spsc::Array<T>>,
-	pub(super) name: &'static str,
-}
-
-impl<T: Send + 'static> std::fmt::Debug for SyncSpscRx<T> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("SyncSpscRx").field("name", &self.name).finish()
 	}
 }
 
@@ -210,6 +202,22 @@ where
 	/// Returns whether the receiver has disconnected.
 	pub fn is_disconnected(&self) -> bool {
 		self.inner.is_disconnected()
+	}
+}
+
+// endregion: --- SyncSpscTx Implementations
+
+// region:    --- SyncSpscRx Implementations
+
+/// SpSc synchronous single-consumer receiver. Not clonable.
+pub struct SyncSpscRx<T: Send + 'static> {
+	pub(super) inner: Rx<spsc::Array<T>>,
+	pub(super) name: &'static str,
+}
+
+impl<T: Send + 'static> std::fmt::Debug for SyncSpscRx<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("SyncSpscRx").field("name", &self.name).finish()
 	}
 }
 
@@ -252,7 +260,7 @@ where
 	}
 }
 
-// endregion: --- Sync Spsc Implementations
+// endregion: --- SyncSpscRx Implementations
 
 // region:    --- Tests
 
@@ -324,7 +332,12 @@ mod tests {
 		let error = rx.recv().await;
 
 		// -- Check
-		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "spsc-disconnect-test" })));
+		assert!(matches!(
+			error,
+			Err(EventBaseError::RxDisconnected {
+				name: "spsc-disconnect-test"
+			})
+		));
 		assert!(rx.is_disconnected());
 		Ok(())
 	}

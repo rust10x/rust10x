@@ -59,22 +59,6 @@ impl<T: Send + 'static> std::fmt::Debug for MpscTx<T> {
 	}
 }
 
-// endregion: --- MpscTx Implementations
-
-// region:    --- MpscRx Implementations
-
-/// MpSc SingleConsumer receiver. Not clonable.
-pub struct MpscRx<T: Send + 'static> {
-	pub(super) inner: AsyncRx<mpsc::Array<T>>,
-	pub(super) name: &'static str,
-}
-
-impl<T: Send + 'static> std::fmt::Debug for MpscRx<T> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("MpscRx").field("name", &self.name).finish()
-	}
-}
-
 impl<T> MpscTx<T>
 where
 	T: Send + 'static,
@@ -138,6 +122,21 @@ where
 			//
 			Err(TrySendError::Disconnected(_)) => Err(EventBaseError::TxDisconnected { name: self.name }),
 		}
+	}
+}
+// endregion: --- MpscTx Implementations
+
+// region:    --- MpscRx Implementations
+
+/// MpSc SingleConsumer receiver. Not clonable.
+pub struct MpscRx<T: Send + 'static> {
+	pub(super) inner: AsyncRx<mpsc::Array<T>>,
+	pub(super) name: &'static str,
+}
+
+impl<T: Send + 'static> std::fmt::Debug for MpscRx<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("MpscRx").field("name", &self.name).finish()
 	}
 }
 
@@ -234,7 +233,12 @@ mod tests {
 		let error = rx.recv().await;
 
 		// -- Check
-		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "mpsc-disconnect-test" })));
+		assert!(matches!(
+			error,
+			Err(EventBaseError::RxDisconnected {
+				name: "mpsc-disconnect-test"
+			})
+		));
 		assert!(rx.is_disconnected());
 		Ok(())
 	}
