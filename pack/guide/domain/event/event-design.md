@@ -142,15 +142,43 @@ flowchart LR
 
 For example, an AI job domain can wrap each Level 1 endpoint separately. The constructor returns distinct values, so a producer receives only `AiJobTx` and a worker receives only `AiJobRx`.
 
+Level 3 owns the public error contract. A Level 3 implementation may translate a Level 1 error internally, but its public signatures must not return `EventBaseResult` or `EventBaseError`.
+
+Keep this translation explicit at the Level 3 boundary. An explicit mapper makes the domain classification visible, avoids exposing the Level 1 error relationship through a general `From` implementation, and leaves room for domain-specific policy as the error model evolves.
+
 ```rust
+use crate::event_base::{EventBaseError, MpmcRx, MpmcTx, new_mpmc_bounded};
+use derive_more::Display;
+
+#[derive(Debug, Display)]
+pub enum AiJobError {
+	#[display("AI job queue is unavailable")]
+	QueueUnavailable,
+
+	#[display("AI job queue is closed")]
+	QueueClosed,
+}
+
+pub type AiJobResult<T> = core::result::Result<T, AiJobError>;
+
+impl std::error::Error for AiJobError {}
+
+fn map_event_base_error(error: EventBaseError) -> AiJobError {
+	if error.is_disconnected() {
+		AiJobError::QueueClosed
+	} else {
+		AiJobError::QueueUnavailable
+	}
+}
+
 #[derive(Clone)]
 pub struct AiJobTx {
 	inner: MpmcTx<AiJob>,
 }
 
 impl AiJobTx {
-	pub async fn exec_request(&self, job: AiJob) -> EventBaseResult<()> {
-		self.inner.send(job).await
+	pub async fn exec_request(&self, job: AiJob) -> AiJobResult<()> {
+		self.inner.send(job).await.map_err(map_event_base_error)
 	}
 }
 
@@ -160,13 +188,13 @@ pub struct AiJobRx {
 }
 
 impl AiJobRx {
-	pub async fn next_request(&self) -> EventBaseResult<AiJob> {
-		self.inner.recv().await
+	pub async fn next_request(&self) -> AiJobResult<AiJob> {
+		self.inner.recv().await.map_err(map_event_base_error)
 	}
 }
 
-pub fn new_ai_job_channel() -> EventBaseResult<(AiJobTx, AiJobRx)> {
-	let (tx, rx) = new_mpmc_bounded("ai-jobs", JOB_QUEUE_CAPACITY)?;
+pub fn new_ai_job_channel() -> AiJobResult<(AiJobTx, AiJobRx)> {
+	let (tx, rx) = new_mpmc_bounded("ai-jobs", JOB_QUEUE_CAPACITY).map_err(map_event_base_error)?;
 	Ok((AiJobTx { inner: tx }, AiJobRx { inner: rx }))
 }
 ```
@@ -180,9 +208,9 @@ A Level 3 type should:
 - Own the Level 1 or Level 2 endpoints it needs, including coordination across several channels.
 - Hold the domain state or policy, such as capacity defaults, filtering, or reply routing.
 - Attach a oneshot reply endpoint to a request when the caller needs exactly one result.
-- Preserve Level 1 shutdown and error semantics unless the domain has a clear reason to add context.
+- Translate Level 1 errors into domain-owned errors. Preserve distinctions that matter to the domain, but do not expose `EventBaseError` or `EventBaseResult` in Level 3 signatures.
 
-A Level 3 type should not duplicate backend construction, translate backend errors directly, or expose backend endpoint types. Channel construction and error translation belong to Level 1. A Level 3 constructor may select a Level 1 factory, channel name, and domain capacity while returning domain-owned wrappers.
+A Level 3 type should not duplicate backend construction, translate backend errors directly, or expose backend endpoint types. Channel construction and translation of backend errors into Level 1 errors belong to Level 1. Translation of Level 1 errors into domain-owned errors belongs at the Level 3 boundary. A Level 3 constructor may select a Level 1 factory, channel name, and domain capacity while returning domain-owned wrappers.
 
 ### Choosing the Topology
 

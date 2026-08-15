@@ -96,3 +96,62 @@ impl<T> OnceRx<T> {
 }
 
 // endregion: --- Implementation OnceRx<T>
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+	use super::*;
+
+	#[tokio::test]
+	async fn test_event_base_once_send_recv() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_once::<u32>("once-test");
+
+		// -- Exec
+		tx.send(11);
+
+		// -- Check
+		assert_eq!(rx.name(), "once-test");
+		let value = rx.recv().await?;
+		assert_eq!(value, 11);
+		Ok(())
+	}
+
+	#[test]
+	fn test_event_base_once_try_recv_empty() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_once::<u32>("once-empty-test");
+
+		// -- Exec
+		let value = rx.try_recv()?;
+
+		// -- Check
+		assert_eq!(value, None);
+		assert!(!tx.is_disconnected());
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_once_disconnection() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_once::<u32>("once-disconnect-test");
+		drop(tx);
+
+		// -- Exec
+		let error = rx.recv().await;
+
+		// -- Check
+		assert!(matches!(
+			error,
+			Err(EventBaseError::RxDisconnected {
+				name: "once-disconnect-test"
+			})
+		));
+		Ok(())
+	}
+}
+
+// endregion: --- Tests

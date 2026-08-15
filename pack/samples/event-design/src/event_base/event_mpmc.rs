@@ -192,3 +192,67 @@ where
 }
 
 // endregion: --- MpmcRx Implementations
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+	use super::*;
+
+	#[tokio::test]
+	async fn test_event_base_mpmc_send_recv() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_mpmc_bounded::<u32>("mpmc-test", 2)?;
+		let second_tx = tx.clone();
+		let second_rx = rx.clone();
+
+		// -- Exec
+		tx.send(1).await?;
+		second_tx.send(2).await?;
+		let first = rx.recv().await?;
+		let second = second_rx.recv().await?;
+
+		// -- Check
+		assert_eq!([first, second], [1, 2]);
+		assert_eq!(tx.name(), "mpmc-test");
+		assert_eq!(rx.name(), "mpmc-test");
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_mpmc_try_operations() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_mpmc_bounded::<u32>("mpmc-try-test", 1)?;
+
+		// -- Exec
+		let first = tx.try_send(1)?;
+		let second = tx.try_send(2)?;
+		let received = rx.try_recv()?;
+
+		// -- Check
+		assert!(first.is_none());
+		assert_eq!(second, Some(2));
+		assert_eq!(received, Some(1));
+		assert_eq!(rx.try_recv()?, None);
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_mpmc_disconnection() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_mpmc_bounded::<u32>("mpmc-disconnect-test", 1)?;
+		drop(tx);
+
+		// -- Exec
+		let error = rx.recv().await;
+
+		// -- Check
+		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "mpmc-disconnect-test" })));
+		assert!(rx.is_disconnected());
+		Ok(())
+	}
+}
+
+// endregion: --- Tests

@@ -181,3 +181,82 @@ where
 }
 
 // endregion: --- MpscRx Implementations
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+	use super::*;
+
+	#[tokio::test]
+	async fn test_event_base_mpsc_send_recv() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_mpsc_bounded::<u32>("mpsc-test", 1)?;
+
+		// -- Exec
+		tx.send(42).await?;
+		let value = rx.recv().await?;
+
+		// -- Check
+		assert_eq!(value, 42);
+		assert_eq!(tx.name(), "mpsc-test");
+		assert_eq!(rx.name(), "mpsc-test");
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_mpsc_try_operations() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_mpsc_bounded::<u32>("mpsc-try-test", 1)?;
+
+		// -- Exec
+		let first = tx.try_send(1)?;
+		let second = tx.try_send(2)?;
+		let received = rx.try_recv()?;
+
+		// -- Check
+		assert!(first.is_none());
+		assert_eq!(second, Some(2));
+		assert_eq!(received, Some(1));
+		assert_eq!(rx.try_recv()?, None);
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_mpsc_disconnection() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_mpsc_bounded::<u32>("mpsc-disconnect-test", 1)?;
+		drop(tx);
+
+		// -- Exec
+		let error = rx.recv().await;
+
+		// -- Check
+		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "mpsc-disconnect-test" })));
+		assert!(rx.is_disconnected());
+		Ok(())
+	}
+
+	#[test]
+	fn test_event_base_mpsc_invalid_capacity() -> Result<()> {
+		// -- Setup & Fixtures
+		let result = new_mpsc_bounded::<u32>("mpsc-capacity-test", 0);
+
+		// -- Exec
+		let error = result;
+
+		// -- Check
+		assert!(matches!(
+			error,
+			Err(EventBaseError::InvalidCapacity {
+				name: "mpsc-capacity-test",
+				capacity: 0
+			})
+		));
+		Ok(())
+	}
+}
+
+// endregion: --- Tests

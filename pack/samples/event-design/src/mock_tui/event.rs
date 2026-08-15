@@ -16,7 +16,7 @@ pub fn new_tui_channel() -> EventBaseResult<(TuiTx, TuiRx)> {
 	new_mpsc_bounded("mock-tui", 16)
 }
 
-pub async fn run_demo() -> EventBaseResult<()> {
+pub async fn run_demo() -> crate::Result<()> {
 	let (tx, rx) = new_tui_channel()?;
 	try_join!(simulate_input(tx), run_event_loop(rx))?;
 	Ok(())
@@ -24,17 +24,19 @@ pub async fn run_demo() -> EventBaseResult<()> {
 
 // region:    --- Support
 
-async fn simulate_input(tx: TuiTx) -> EventBaseResult<()> {
+async fn simulate_input(tx: TuiTx) -> crate::Result<()> {
 	tx.send(TuiEvent::Input(String::from("open settings"))).await?;
 	sleep(Duration::from_millis(100)).await;
 
 	tx.send(TuiEvent::Resize { width: 120, height: 40 }).await?;
 	sleep(Duration::from_millis(100)).await;
 
-	tx.send(TuiEvent::Quit).await
+	tx.send(TuiEvent::Quit).await?;
+
+	Ok(())
 }
 
-async fn run_event_loop(mut rx: TuiRx) -> EventBaseResult<()> {
+async fn run_event_loop(mut rx: TuiRx) -> crate::Result<()> {
 	loop {
 		match rx.recv().await? {
 			TuiEvent::Input(value) => println!("[tui] input: {value}"),

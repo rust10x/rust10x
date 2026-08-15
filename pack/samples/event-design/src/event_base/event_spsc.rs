@@ -253,3 +253,81 @@ where
 }
 
 // endregion: --- Sync Spsc Implementations
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+	use super::*;
+
+	#[tokio::test]
+	async fn test_event_base_spsc_async_send_recv() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_spsc_bounded::<u32>("spsc-async-test", 1)?;
+
+		// -- Exec
+		tx.send(7).await?;
+		let value = rx.recv().await?;
+
+		// -- Check
+		assert_eq!(value, 7);
+		assert_eq!(tx.name(), "spsc-async-test");
+		assert_eq!(rx.name(), "spsc-async-test");
+		Ok(())
+	}
+
+	#[test]
+	fn test_event_base_spsc_sync_conversion() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_spsc_bounded::<u32>("spsc-sync-test", 1)?;
+		let sync_tx = tx.into_sync_tx();
+		let sync_rx = rx.into_sync_rx();
+
+		// -- Exec
+		sync_tx.send_sync(9)?;
+		let value = sync_rx.recv_sync()?;
+
+		// -- Check
+		assert_eq!(value, 9);
+		assert_eq!(sync_tx.name(), "spsc-sync-test");
+		assert_eq!(sync_rx.name(), "spsc-sync-test");
+		Ok(())
+	}
+
+	#[test]
+	fn test_event_base_spsc_try_operations() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, rx) = new_spsc_bounded::<u32>("spsc-try-test", 1)?;
+
+		// -- Exec
+		let first = tx.try_send(1)?;
+		let second = tx.try_send(2)?;
+		let received = rx.try_recv()?;
+
+		// -- Check
+		assert!(first.is_none());
+		assert_eq!(second, Some(2));
+		assert_eq!(received, Some(1));
+		assert_eq!(rx.try_recv()?, None);
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_event_base_spsc_disconnection() -> Result<()> {
+		// -- Setup & Fixtures
+		let (tx, mut rx) = new_spsc_bounded::<u32>("spsc-disconnect-test", 1)?;
+		drop(tx);
+
+		// -- Exec
+		let error = rx.recv().await;
+
+		// -- Check
+		assert!(matches!(error, Err(EventBaseError::RxDisconnected { name: "spsc-disconnect-test" })));
+		assert!(rx.is_disconnected());
+		Ok(())
+	}
+}
+
+// endregion: --- Tests
