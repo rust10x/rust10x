@@ -697,6 +697,73 @@ The TUI uses:
 - A Ratatui vertical scrollbar for paragraph-based content.
 - Visibility checks based on the remaining item or line count.
 
+### Scrollbar Math and Styling Patterns
+
+The CLI uses two distinct visual patterns for displaying scroll progress and overflow: full Ratatui vertical scrollbars for long multiline views (such as `RunOverviewView` and `TaskView`), and contextual discrete indicator icons for list panes (such as `RunTasksView`).
+
+#### Vertical Scrollbar Widget (`Scrollbar` & `ScrollbarState`)
+
+For scrollable paragraphs and log bodies, the TUI configures Ratatui's `Scrollbar` widget attached to the right edge of the content area.
+
+1. **Width Reservation**:
+   Content rendering reserves horizontal space for the vertical scrollbar track by subtracting 3 columns from the content layout width:
+   ```rust
+   let max_width = area.width - 3; // reserve space for vertical scrollbar
+   ```
+
+2. **Content Size and Position Math**:
+   `ScrollbarState` requires `content_length` (the maximum scroll offset range) and `position` (the current scroll offset). The content size represents the amount of content extending beyond a single viewport screen:
+   ```rust
+   let content_size = line_count.saturating_sub(area.height as usize);
+   let mut scrollbar_state = ScrollbarState::new(content_size).position(scroll as usize);
+   ```
+
+3. **Symbols and Characters**:
+   The scrollbar overrides the default symbols with explicit Unicode arrows:
+   - Top begin symbol: `"▲"` (`\u{25B2}`)
+   - Bottom end symbol: `"▼"` (`\u{25BC}`)
+   - Track orientation: `ratatui::widgets::ScrollbarOrientation::VerticalRight`
+
+```rust
+let content_size = line_count.saturating_sub(area.height as usize);
+let mut scrollbar_state = ScrollbarState::new(content_size).position(scroll as usize);
+
+let scrollbar = Scrollbar::default()
+	.orientation(ratatui::widgets::ScrollbarOrientation::VerticalRight)
+	.begin_symbol(Some("▲"))
+	.end_symbol(Some("▼"));
+scrollbar.render(area, buf, &mut scrollbar_state);
+```
+
+#### Discrete Scroll Indicator Icons
+
+In list sidebars (such as task navigation), where a full scrollbar track would consume too much horizontal width, single-cell indicator icons are rendered conditionally in the corners of the list area.
+
+1. **Bottom Overflow Math**:
+   Down arrow icon appears when the unviewed items below the current viewport exceed the viewport height:
+   ```rust
+   let item_count = tasks_len as u16;
+   if item_count.saturating_sub(scroll) > tasks_list_a.height {
+   	let bottom_ico = tasks_list_a.x_bottom_right(1, 1);
+   	comp::ico_scroll_down().render(bottom_ico, buf);
+   }
+   ```
+
+2. **Top Overflow Math**:
+   Up arrow icon appears when the list is scrolled down from the top and there are remaining items above:
+   ```rust
+   if scroll > 0 && item_count > tasks_list_a.height.saturating_sub(scroll) {
+   	let top_ico = tasks_list_a.x_top_right(1, 1);
+   	comp::ico_scroll_up().render(top_ico, buf);
+   }
+   ```
+
+3. **Placement Helpers**:
+   The icon positions use rectangle extension helpers:
+   - `area.x_top_right(1, 1)` allocates a 1x1 cell in the top-right corner.
+   - `area.x_bottom_right(1, 1)` allocates a 1x1 cell in the bottom-right corner.
+   - `ico_scroll_up()` and `ico_scroll_down()` render styled arrow glyphs.
+
 A future shared helper could centralize indicator placement, but the current implementation gives each view control over whether headers, separators, or reserved scrollbar columns affect the calculation.
 
 ### Scroll Invariants
