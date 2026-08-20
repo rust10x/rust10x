@@ -41,9 +41,8 @@ mod tests {
         // ... same structure as above.
     }
 
-    // region:    --- Support
+    // -- Test Support
     // ... support functions that might be used in above code. 
-    // endregion: --- Support
 }
 
 // endregion: --- Tests
@@ -72,11 +71,10 @@ mod tests {
     - `// endregion: --- Tests` at the end.
   - This helps with visual grouping and organization of the tests within any module.
 
-- For tests that require helper functions:
-  
-  - Have a nested support region marked with:
-    - `// region:    --- Support`, and
-    - `// endregion: --- Support` for additional helper functions used only during tests.
+ For tests that require helper functions:
+
+  - Inside an inline test module (`mod tests { ... }`), place helper functions at the end under a `// -- Test Support` section marker.
+  - In a dedicated test file (for example, `..._tests.rs` or integration test files), group helper functions at the end of the file within a `// region:    --- Test Support` and `// endregion: --- Test Support` code region.
 
 - Always define a dedicated type alias for test results at the top of your tests:
   - For instance:
@@ -125,10 +123,10 @@ mod tests;
 
 ## test_support
 
-Unit tests and integration tests can have test support functions.
+Unit tests and integration tests can have shared test support functions.
 
 - For unit tests, they will be under `src/_test_support/mod.rs` (exported as `test_support`).
-- For integration tests, they will be under `tests/test_support/mod.rs`.
+- For integration tests, they will be under `tests/_test_support/mod.rs`.
 - The `mod.rs` will look something like:
 
 ```rust
