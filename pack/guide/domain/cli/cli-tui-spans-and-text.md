@@ -69,6 +69,34 @@ Consistent text formatting ensures visual stability and predictable alignment ac
 - Alignment formatting: Format string macros (such as `format!("{label:<width$}")` for left alignment or right-aligned Paragraphs) guarantee that bounding boxes remain exact.
 - Numeric metrics: Duration and cost formatting helper functions produce compact, human-readable strings with fixed or predictable bounds.
 
+## Text Wrapping Patterns
+
+Views use two complementary wrapping and layout strategies depending on whether the source content is a raw string or already constructed as styled spans:
+
+### 1. String Content Wrapping (`textwrap::wrap`)
+
+For multiline textual content such as log records, error messages, and pin contents, wrapping is handled dynamically using `textwrap::wrap`:
+
+- **Tab expansion with `Cow<str>`**: If the input string contains `\t`, replace tabs with 4 spaces (`Cow::Owned`), otherwise borrow the original slice (`Cow::Borrowed`) to avoid unnecessary allocations.
+- **Available width derivation**: Calculate content width by subtracting the marker width and spacer width from the total available section width: `width_content = max_width.saturating_sub(marker_width + width_spacer)`.
+- **First line prefixing**: The first wrapped line receives the right-aligned marker span followed by the spacer span and any optional prefix spans.
+- **Continuation line indentation**: Subsequent wrapped lines omit the marker text and instead receive leading blank space equal to `marker_width + width_spacer`, followed by any optional prefix spans.
+- **Per-wrapped-line path segmentation**: Path detection (`segment_line_path`) executes on each individual wrapped slice. This ensures path styling and link zones match the visual position of the wrapped text.
+- **Logical line indexing**: Each wrapped line is treated as an independent logical line for link-zone registration (`rel_line_idx`), and the link-zone tracker increments its current line index by `lines.len()` at the end of the section.
+
+### 2. Pre-Styled Span Multiline Layout
+
+When content lines are already composed of styled span vectors (`Vec<Vec<Span<'static>>>`):
+
+- **Empty content**: Returns a single line containing only the marker and spacer spans.
+- **Single line**: Prepends the marker and spacer spans directly to the content spans.
+- **Multiline**: Prepends the marker and spacer to the first content line. For each subsequent line, generates an indentation prefix span of width `marker_spans.x_width()`, appends the spacer spans, and attaches the line's content spans.
+
+### 3. Single-Line Truncation vs Multiline Wrapping
+
+- Single-line list rows (such as task inputs, task outputs, and task skip notes) should not wrap. They sanitize newlines (`replace('\n', " ")`) and truncate with trailing ellipsis (`truncate_with_ellipsis(text, max_len, "..")`).
+- Multiline record blocks (logs, errors, pins) preserve newlines, wrap to the content width, and maintain marker alignment across wrapped lines.
+
 ## Marker Section Layout
 
 `ui_for_marker_section_str` produces marker-prefixed, wrapped, optionally path-aware content and can register link zones while it builds the lines:
