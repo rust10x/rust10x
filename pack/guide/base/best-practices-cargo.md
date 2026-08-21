@@ -19,6 +19,12 @@ doctest = false
 unsafe_code = "forbid"
 # unused = { level = "allow", priority = -1 } # For exploratory dev.
 
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [dependencies]
 # -- Async
 tokio = { version = "1", features = ["full"] }
@@ -32,6 +38,7 @@ derive_more = {version = "2", features = ["from", "display"] }
 ````
 
 - In the `dependencies` toml section, do not add empty line above or below `# -- ...` comment lines. 
+- The `profile.dev` are good default for compile optimization.
 - Add the `[lib]` only if the crate is lib. 
 - When lib, add the `doctest = false` under the `[lib]`
 - By default, we will have the `lints.rust` section above, with the commented `unused` option that the user will toggle on and off during dev.
