@@ -1,21 +1,21 @@
-# CLI TUI Interaction & LinkZones
+# CLI TUI Interaction & ActionZones
 
 ## Purpose
 
-This guide details span-level interactive metadata (`LinkZone`), pointer hit testing, multi-line grouped hovers, overlapping zone precedence, and action dispatch integration.
+This guide details span-level interactive metadata (`ActionZone`), pointer hit testing, multi-line grouped hovers, overlapping zone precedence, and action dispatch integration.
 
-## LinkZone Metadata
+## ActionZone Metadata
 
-A `LinkZone` connects a rendered span range to a `UiAction`.
+An `ActionZone` connects a rendered span range to a `UiAction`.
 
-### Terminology: LinkZone vs ScrollZone
+### Terminology: ActionZone vs ScrollZone
 
 The CLI codebase maintains two distinct zone systems:
 
 - `ScrollZone` / `ScrollZones`: Tracks viewport bounding boxes and scroll offsets for mouse-wheel hit resolution and keyboard scroll routing.
-- `LinkZone` / `LinkZones`: Tracks span-level coordinate ranges within rendered lines to bind click and hover events to executable `UiAction` intents (such as `OpenFile`, `ToClipboardCopy`, or `GoToTask`).
+- `ActionZone` / `ActionZones`: Tracks span-level coordinate ranges within rendered lines to bind click and hover events to executable `UiAction` intents (such as `OpenFile`, `ToClipboardCopy`, or `GoToTask`).
 
-The `LinkZone` name explicitly differentiates span-level interactive action targets from viewport-level scrollable regions (`ScrollZone`).
+The `ActionZone` name explicitly differentiates span-level interactive action targets from viewport-level scrollable regions (`ScrollZone`).
 
 Each zone stores:
 
@@ -27,7 +27,7 @@ Each zone stores:
 
 ```rust
 #[derive(Debug, Clone)]
-pub struct LinkZone {
+pub struct ActionZone {
 	pub line_idx: usize,
 	pub span_start: usize,
 	pub span_count: usize,
@@ -36,13 +36,13 @@ pub struct LinkZone {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct LinkZones {
+pub struct ActionZones {
 	current_line: usize,
-	zones: Vec<LinkZone>,
+	zones: Vec<ActionZone>,
 	next_group_id: u32,
 }
 
-impl LinkZones {
+impl ActionZones {
 	pub fn set_current_line(&mut self, current_line: usize) {
 		self.current_line = current_line;
 	}
@@ -51,9 +51,9 @@ impl LinkZones {
 		self.current_line += amount;
 	}
 
-	pub fn push_link_zone(&mut self, rel_line_idx: usize, span_start: usize, span_count: usize, action: UiAction) {
+	pub fn push_action_zone(&mut self, rel_line_idx: usize, span_start: usize, span_count: usize, action: UiAction) {
 		let line_idx = self.current_line + rel_line_idx;
-		self.zones.push(LinkZone { line_idx, span_start, span_count, action, group_id: None });
+		self.zones.push(ActionZone { line_idx, span_start, span_count, action, group_id: None });
 	}
 
 	pub fn start_group(&mut self) -> u32 {
@@ -71,10 +71,10 @@ impl LinkZones {
 		action: UiAction,
 	) {
 		let line_idx = self.current_line + rel_line_idx;
-		self.zones.push(LinkZone { line_idx, span_start, span_count, action, group_id: Some(group_id) });
+		self.zones.push(ActionZone { line_idx, span_start, span_count, action, group_id: Some(group_id) });
 	}
 
-	pub fn into_zones(self) -> Vec<LinkZone> {
+	pub fn into_zones(self) -> Vec<ActionZone> {
 		self.zones
 	}
 }
@@ -92,7 +92,7 @@ The standard registration sequence is:
 - Increment again when a separator line is appended.
 - Set the next section's current line before building its zones.
 
-`push_link_zone` registers an ungrouped zone suitable for a file path or task block. `start_group` and `push_group_zone` register zones that participate in section-wide hover and click behavior.
+`push_action_zone` registers an ungrouped zone suitable for a file path or task block. `start_group` and `push_group_zone` register zones that participate in section-wide hover and click behavior.
 
 ## Grouped Sections
 
@@ -109,7 +109,7 @@ The broad group action is commonly `ToClipboardCopy`. The path-specific action i
 
 ## Hit Testing
 
-`LinkZone::is_mouse_over` performs hit testing using:
+`ActionZone::is_mouse_over` performs hit testing using:
 
 - The reference viewport `Rect`.
 - The current scroll offset.
@@ -127,7 +127,7 @@ The hit-test process is:
 - Return the mutable zone span slice when the mouse is inside that rectangle.
 
 ```rust
-impl LinkZone {
+impl ActionZone {
 	pub fn is_mouse_over<'a>(
 		&self,
 		ref_area: Rect,
@@ -189,7 +189,7 @@ Hover rendering uses two passes:
 - Pass 2: reads the selected zone's action and group, applies hover styles to matching spans, and stores the action in `AppState` when clicked.
 
 ```rust
-let zones = link_zones.into_zones();
+let zones = action_zones.into_zones();
 
 // Pass 1: detect most specific hovered zone (minimum span_count)
 let mut hovered_idx: Option<usize> = None;
@@ -240,7 +240,7 @@ if let Some(i) = hovered_idx {
 }
 ```
 
-## LinkZone Invariants & Checklist
+## ActionZone Invariants & Checklist
 
 The following invariants must hold:
 

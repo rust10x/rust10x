@@ -4,7 +4,7 @@
 
 This guide documents the high-level application lifecycle, rendering pipeline, function naming conventions, and action dispatch flow used by the Ratatui TUI in the CLI.
 
-It provides the foundational principles required before implementing view layouts, scroll zones, or interactive link metadata.
+It provides the foundational principles required before implementing view layouts, scroll zones, or interactive action zone metadata.
 
 ## Core Architecture Overview
 
@@ -13,7 +13,7 @@ The TUI separates state management, content construction, interaction metadata c
 1. `AppState` stores selection, scroll positions, mouse events, pending actions, and model data.
 2. The state processor transforms raw terminal, keyboard, and mouse events into state updates.
 3. Views register their active scroll areas, calculate clamping, and construct owned `Line<'static>` or `Span<'static>` collections.
-4. Builders optionally populate `LinkZones` with action metadata, span offsets, and grouping identifiers.
+4. Builders optionally populate `ActionZones` with action metadata, span offsets, and grouping identifiers.
 5. Views execute a two-pass hover test; pass 1 finds the most specific hovered zone; pass 2 mutates span styles (such as hover highlight) and queues clicked actions into `AppState`.
 6. Ratatui widgets (`Paragraph`, `Scrollbar`, `Block`) render the styled buffer.
 7. The state processor centrally executes queued `UiAction` side effects (clipboard copies, file opens, task navigation).
@@ -41,7 +41,7 @@ Use function names to communicate the amount of state and interaction involved.
 
 - `ui_for_*_with_hover`
 
-  Builds content and registers `LinkZone` metadata for hover and click handling. The function should not execute the action.
+  Builds content and registers `ActionZone` metadata for hover and click handling. The function should not execute the action.
 
 - `render_*`
 
@@ -59,7 +59,7 @@ The responsibility split is:
 
 - Components decide what content and spans exist.
 - Views decide where content is placed and how it is scrolled.
-- `LinkZones` describes which rendered spans are interactive.
+- `ActionZones` describes which rendered spans are interactive.
 - `AppState` stores the resulting intent.
 - The state processor executes the intent.
 
@@ -101,7 +101,7 @@ Current costs include:
 
 - Hover detection and dispatch are repeated across several views.
 - Scroll indicator calculations are written per view.
-- Link-zone line offsets are manually maintained.
+- Action-zone line offsets are manually maintained.
 - Fixed-width components require narrow-terminal validation.
 - Page scrolling is fixed rather than viewport-relative.
 - A shared scroll identifier can intentionally or unintentionally share position across tabs.
@@ -109,5 +109,5 @@ Current costs include:
 Potential future abstractions should preserve the existing responsibilities:
 
 - A shared scroll viewport helper could centralize clamping, visible ranges, and indicators.
-- A shared link-zone dispatcher could centralize specificity selection and hover application.
+- A shared action-zone dispatcher could centralize specificity selection and hover application.
 - A logical line builder could own line offsets and separator accounting.

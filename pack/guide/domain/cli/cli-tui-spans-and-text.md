@@ -11,7 +11,7 @@ Constructing and managing individual `Span<'static>` instances directly, rather 
 - Responsive width measurement: Span widths can be computed prior to buffer rendering using `UiExt::x_width`, allowing dynamic truncation, padding, and alignment adjustments based on container bounds.
 - Selective styling: Individual token segments (markers, labels, values, file paths, status icons) maintain independent colors and modifiers without string splitting at render time.
 - Dynamic hover and interaction states: Mutable span slices (`&mut [Span]`) allow two-pass hover highlighting to update foreground colors, backgrounds, or underline modifiers immediately before passing lines to Ratatui widgets.
-- Precise interaction mapping: `LinkZone` hit testing relies on exact span byte offsets and calculated visual widths to resolve clicks down to specific path tokens or broad grouped blocks.
+- Precise interaction mapping: `ActionZone` hit testing relies on exact span byte offsets and calculated visual widths to resolve clicks down to specific path tokens or broad grouped blocks.
 
 ## Owned Render Output
 
@@ -82,7 +82,7 @@ For multiline textual content such as log records, error messages, and pin conte
 - **First line prefixing**: The first wrapped line receives the right-aligned marker span followed by the spacer span and any optional prefix spans.
 - **Continuation line indentation**: Subsequent wrapped lines omit the marker text and instead receive leading blank space equal to `marker_width + width_spacer`, followed by any optional prefix spans.
 - **Per-wrapped-line path segmentation**: Path detection (`segment_line_path`) executes on each individual wrapped slice. This ensures path styling and link zones match the visual position of the wrapped text.
-- **Logical line indexing**: Each wrapped line is treated as an independent logical line for link-zone registration (`rel_line_idx`), and the link-zone tracker increments its current line index by `lines.len()` at the end of the section.
+- **Logical line indexing**: Each wrapped line is treated as an independent logical line for action-zone registration (`rel_line_idx`), and the action-zone tracker increments its current line index by `lines.len()` at the end of the section.
 
 ### 2. Pre-Styled Span Multiline Layout
 
@@ -99,7 +99,7 @@ When content lines are already composed of styled span vectors (`Vec<Vec<Span<'s
 
 ## Marker Section Layout
 
-`ui_for_marker_section_str` produces marker-prefixed, wrapped, optionally path-aware content and can register link zones while it builds the lines:
+`ui_for_marker_section_str` produces marker-prefixed, wrapped, optionally path-aware content and can register action zones while it builds the lines:
 
 - A marker is right-aligned to a minimum width (`MARKER_MIN_WIDTH`, default 10).
 - A one-character spacer follows the marker.
@@ -108,7 +108,7 @@ When content lines are already composed of styled span vectors (`Vec<Vec<Span<'s
 - Continuation lines receive blank marker indentation.
 - Path segments receive path styling and optional `OpenFile` actions.
 - Content segments may receive a grouped action such as `ToClipboardCopy`.
-- The line accumulator advances the current link-zone line after the section.
+- The line accumulator advances the current action-zone line after the section.
 
 ```rust
 use std::borrow::Cow;
@@ -127,7 +127,7 @@ pub fn ui_for_marker_section_str(
 	(marker_txt, marker_style): (&str, Style),
 	max_width: u16,
 	content_prefix: Option<&Vec<Span<'static>>>,
-	mut link_zones: Option<&mut LinkZones>,
+	mut action_zones: Option<&mut ActionZones>,
 	action: Option<UiAction>,
 	path_color: Option<Color>,
 ) -> Vec<Line<'static>> {
@@ -147,8 +147,8 @@ pub fn ui_for_marker_section_str(
 	let msg_wrap_len = msg_wrap.len();
 	let mut msg_wrap_iter = msg_wrap.into_iter();
 
-	let group_id = if let Some(lz) = link_zones.as_mut() && action.is_some() {
-		Some(lz.start_group())
+	let group_id = if let Some(az) = action_zones.as_mut() && action.is_some() {
+		Some(az.start_group())
 	} else {
 		None
 	};
@@ -158,7 +158,7 @@ pub fn ui_for_marker_section_str(
 	let mut push_line_fn = |rel_line_idx: usize,
 	                        prefix_spans: Vec<Span<'static>>,
 	                        line_content: &str,
-	                        mut lz_opt: Option<&mut LinkZones>,
+	                        mut az_opt: Option<&mut ActionZones>,
 	                        gid_opt: Option<u32>,
 	                        main_action_opt: Option<&UiAction>| {
 		let mut spans = prefix_spans;
@@ -174,17 +174,17 @@ pub fn ui_for_marker_section_str(
 			let span_idx = spans.len();
 			spans.push(Span::styled(seg.text, style));
 
-			if let Some(lz) = lz_opt.as_mut() {
+			if let Some(az) = az_opt.as_mut() {
 				if let Some(path) = seg.file_path {
-					lz.push_link_zone(rel_line_idx, span_idx, 1, UiAction::OpenFile(path.to_string()));
+					az.push_action_zone(rel_line_idx, span_idx, 1, UiAction::OpenFile(path.to_string()));
 				} else if let (Some(gid), Some(act)) = (gid_opt, main_action_opt) {
-					lz.push_group_zone(rel_line_idx, span_idx, 1, gid, act.clone());
+					az.push_group_zone(rel_line_idx, span_idx, 1, gid, act.clone());
 				}
 			}
 		}
 
-		if let (Some(lz), Some(gid), Some(act)) = (lz_opt, gid_opt, main_action_opt) {
-			lz.push_group_zone(
+		if let (Some(az), Some(gid), Some(act)) = (az_opt, gid_opt, main_action_opt) {
+			az.push_group_zone(
 				rel_line_idx,
 				content_span_start,
 				spans.len() - content_span_start,
@@ -201,7 +201,7 @@ pub fn ui_for_marker_section_str(
 	if let Some(spans_prefix) = content_prefix {
 		first_prefix.extend(spans_prefix.to_vec());
 	}
-	push_line_fn(0, first_prefix, &first_content, link_zones.as_deref_mut(), group_id, action.as_ref());
+	push_line_fn(0, first_prefix, &first_content, action_zones.as_deref_mut(), group_id, action.as_ref());
 
 	if msg_wrap_len > 1 {
 		let left_spacing = " ".repeat(marker_width + width_spacer);
@@ -210,12 +210,12 @@ pub fn ui_for_marker_section_str(
 			if let Some(spans_prefix) = content_prefix {
 				other_prefix.extend(spans_prefix.to_vec());
 			}
-			push_line_fn(i + 1, other_prefix, &line_content, link_zones.as_deref_mut(), group_id, action.as_ref());
+			push_line_fn(i + 1, other_prefix, &line_content, action_zones.as_deref_mut(), group_id, action.as_ref());
 		}
 	}
 
-	if let Some(lz) = link_zones.as_mut() {
-		lz.inc_current_line_by(lines.len());
+	if let Some(az) = action_zones.as_mut() {
+		az.inc_current_line_by(lines.len());
 	}
 
 	lines
@@ -234,7 +234,7 @@ Important width rules:
 - Builders should prefer `saturating_sub` when a width can be zero or smaller than the expected component width.
 - Task facade methods use fixed component assumptions for the current layout, so they should not be treated as fully responsive components without additional width guards.
 - Text containing tabs is normalized to four spaces prior to wrapping.
-- Wrapped lines are tracked as separate logical lines for both rendering and link-zone coordinates.
+- Wrapped lines are tracked as separate logical lines for both rendering and action-zone coordinates.
 
 ## Path Segmentation
 
@@ -305,7 +305,7 @@ Path text styling rules:
 
 - Normal path text uses `STL_TXT_PATH` (or an optional debug color override).
 - Hovered path text uses `STL_TXT_PATH_HOVER`, which adds the `Modifier::UNDERLINED` attribute.
-- Path links attach a dedicated `UiAction::OpenFile(path_string)` link zone.
+- Path links attach a dedicated `UiAction::OpenFile(path_string)` action zone.
 
 ## Style Control
 
@@ -334,13 +334,13 @@ Sections commonly end with an empty `Line`.
 When a separator is added after interactive content:
 
 - Add the separator to the returned line collection.
-- Do not attach a link zone to the separator.
-- Advance `LinkZones.current_line` for the separator.
+- Do not attach an action zone to the separator.
+- Advance `ActionZones.current_line` for the separator.
 - Set the next section's current line before registering its zones.
 
 Line accounting must use the same logical line sequence for:
 
 - The rendered `Vec<Line>`.
-- `LinkZone.line_idx`.
+- `ActionZone.line_idx`.
 - Scroll calculations.
 - Virtualized viewport offsets.
