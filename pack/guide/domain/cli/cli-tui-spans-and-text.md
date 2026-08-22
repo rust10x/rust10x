@@ -4,6 +4,24 @@
 
 This guide details span-level construction, text formatting conventions, marker layout schemes, path segmentation, and style management used across CLI views and components.
 
+## Two-Phase Architecture: Layout Engine vs Content Pipeline
+
+The rendering architecture enforces a strict two-phase separation of responsibilities:
+
+- **Layout Phase (Ratatui Layout Engine)**: Ratatui layout primitives (`Layout::default()`, `Constraint`, `Rect`) calculate spatial geometry, divide viewport areas, allocate gutter spacing, and determine the available width for each content region.
+- **Content Phase (Custom Span Pipeline)**: Content builders construct visual rows directly from `Span<'static>` and `Line<'static>` instances. Word wrapping, text normalization, gutter bars, and prefix alignments are resolved before passing lines to Ratatui widgets.
+
+This boundary ensures that geometric constraints govern layout boundaries, while span builders retain full deterministic control over visual line composition.
+
+## Why Upfront Span-Level Wrapping is Necessary
+
+Standard Ratatui widgets provide built-in wrapping via `Paragraph::wrap`. However, widget-level wrapping is unsuitable for structured CLI blocks for several architectural reasons:
+
+- **Gutter and Indicator Destruction**: Ratatui's internal wrap engine treats a line as a flat sequence of characters without awareness of structural gutters, leading indicator bars (`▌ `), or tree markers (`├── `). When a line wraps internally, continuation rows wrap to column 0, breaking visual alignment.
+- **Indentation and Prefix Loss**: Component layouts often require continuation lines to receive blank padding matching the width of the initial marker or icon prefix. Built-in wrapping wraps to the start of the widget area.
+- **ActionZone Desynchronization**: Hit testing and mouse interaction mapping (`ActionZones`) require exact 1:1 correspondence with visual line indices and span ranges. Internal widget wrapping creates visual rows that do not correspond to logical `Line` indices in `ActionZones`.
+- **Deterministic 1:1 Scroll Accounting**: Wrapping upfront via `textwrap::wrap` guarantees that `lines.len()` equals the exact visual row count on screen, eliminating scroll calculation drift and scrollbar estimation errors.
+
 ## Direct Span-Level Control
 
 Constructing and managing individual `Span<'static>` instances directly, rather than relying on high-level opaque widgets, provides essential control points:
@@ -96,6 +114,68 @@ When content lines are already composed of styled span vectors (`Vec<Vec<Span<'s
 
 - Single-line list rows (such as task inputs, task outputs, and task skip notes) should not wrap. They sanitize newlines (`replace('\n', " ")`) and truncate with trailing ellipsis (`truncate_with_ellipsis(text, max_len, "..")`).
 - Multiline record blocks (logs, errors, pins) preserve newlines, wrap to the content width, and maintain marker alignment across wrapped lines.
+
+## Unified Block Architecture
+
+Structured multiline blocks (such as prompt blocks, answer blocks, and error blocks) follow a unified architecture where specific builders are thin convenience wrappers over a single generic core block function (`build_tblock` or `ui_for_marker_section_str`).
+
+When we have control over content layout, it is always preferable to perform word wrapping ourselves using crates such as `textwrap`. This ensures indicator bars, gutters, and prefixes are prepended cleanly to each wrapped visual line.
+
+The generic core handles:
+
+- **Available Width Derivation**: Subtracts indicator bar width and optional inner padding from the target container width.
+- **Text Normalization**: Converts tab characters to uniform spaces before wrapping.
+- **Paragraph Splitting**: Iterates over raw line breaks to preserve intentional paragraphs while wrapping visual lines within each paragraph.
+- **Indicator Bar and Prefix Attachment**: Prepends indicator spans (such as vertical bars or markers) to the first visual line, followed by proper alignment spacing on subsequent wrapped lines.
+
+```rust
+pub fn build_tblock(
+	content: &str,
+	kind: TBlockKind,
+	content_width: u16,
+	custom_style: Option<Style>,
+) -> Vec<Line<'static>> {
+	let bar_width = 2; // "▌ "
+	let width_content = (content_width as usize).saturating_sub(bar_width).max(1);
+	let text_style = custom_style.unwrap_or_else(|| kind.content_style());
+	let mut lines = Vec::new();
+
+	for raw_line in content.lines() {
+		let normalized = if raw_line.contains('\t') {
+			raw_line.replace('\t', "    ")
+		} else {
+			raw_line.to_string()
+		};
+
+		if normalized.is_empty() {
+			lines.push(Line::from(vec![
+				bar_span(kind),
+				Span::styled("", text_style),
+			]));
+			continue;
+		}
+
+		let wrapped = textwrap::wrap(&normalized, width_content);
+		for visual_line in wrapped {
+			lines.push(Line::from(vec![
+				bar_span(kind),
+				Span::styled(visual_line.into_owned(), text_style),
+			]));
+		}
+	}
+
+	if lines.is_empty() {
+		lines.push(Line::from(vec![
+			bar_span(kind),
+			Span::styled("", text_style),
+		]));
+	}
+
+	lines
+}
+```
+
+Convenience wrappers (`build_answer_block`, `build_prompt_block`, `build_error_block`) then delegate directly to `build_tblock`, providing consistent wrapping and gutter alignment across the entire view hierarchy.
 
 ## Marker Section Layout
 
@@ -344,3 +424,5 @@ Line accounting must use the same logical line sequence for:
 - `ActionZone.line_idx`.
 - Scroll calculations.
 - Virtualized viewport offsets.
+
+Because line wrapping is performed upfront during content generation, `lines.len()` directly equals the visual height of the rendered block. This eliminates scroll estimation mismatch and keeps action zones, hover tests, and scroll viewport bounds fully synchronized.
