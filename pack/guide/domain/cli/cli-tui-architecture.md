@@ -18,6 +18,13 @@ The TUI separates state management, content construction, interaction metadata c
 6. Ratatui widgets (`Paragraph`, `Scrollbar`, `Block`) render the styled buffer.
 7. The state processor centrally executes queued `UiAction` side effects (clipboard copies, file opens, task navigation).
 
+## Related Lifecycle Patterns
+
+The core event loop and rendering pipeline rely on two focused architectural patterns:
+
+- **Reactive Demand-Driven Ping Timer**: Drives continuous animations, elapsed timers, and auto-dismissing popups with zero CPU usage at idle. Detailed in `pack/guide/domain/cli/cli-tui-reactive-ping.md`.
+- **Front Event Debouncing and Coalescing**: Drains bursty event streams and deduplicates entity updates using a non-blocking `try_recv` collector. Detailed in `pack/guide/domain/cli/cli-tui-event-debouncing.md`.
+
 ## Rendering Architecture
 
 The normal rendering flow proceeds through well-defined stages:
