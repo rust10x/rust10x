@@ -14,10 +14,9 @@ Organize methods into separate `impl` blocks according to their purpose when doi
 
 - Use meaningful code regions for larger code sections when they improve file organization. Splitting methods into separate `impl` blocks by category does not require a code region; use a concise documentation comment such as `/// Accessors` when a label helps explain the block.
 
-- Never use `.unwrap()` and `.expect("...")` even in test or example codes. 
-  - For test and example, use the `.ok_or("should have ...")?` scheme which works well and production safer with the ?.
-
-- However, using the `.unwrap_or_..(..)` are completely ok and good practices when it fit the logic.
+- Never use `.unwrap()` or `.expect("...")` anywhere across the codebase, including production code, tests, and examples.
+  - In tests and examples where standard boxed error types are used, propagate fallible expressions using the `?` operator and convert `Option` values using `.ok_or("reason...")?`.
+  - NOTE: Using fallback methods such as `.unwrap_or(...)`, `.unwrap_or_default()`, and `.unwrap_or_else(...)` is completely valid and encouraged when handling defaults.
 
 - For constructors and builders (fluid API), when requested or needed
   - use the `Default` pattern for sync and empty constructors. (do not use `new() -> Self` with empty argument)
