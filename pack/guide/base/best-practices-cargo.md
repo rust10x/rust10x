@@ -28,11 +28,10 @@ debug = false
 [dependencies]
 # -- Async
 tokio = { version = "1", features = ["full"] }
-# -- Serde
+# -- Serde & Content Formats
 serde = { version = "1", features = ["derive"] }
-serde_with = { version = "3", features = ["macros"] }
-# -- Content Formats
 serde_json = "1"
+serde_with = { version = "3", features = ["macros"] }
 # -- Others
 derive_more = {version = "2", features = ["from", "display"] }
 ````
