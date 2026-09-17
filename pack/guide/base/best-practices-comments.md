@@ -51,12 +51,23 @@ Good candidates for code regions include:
 
 When these sections are present, each should use its corresponding code region. `Support` and `Tests` regions follow the same structural convention as the `Froms` region.
 
+#### Do Not Add Regions Everywhere
+
+Do not start every source file with a code region, and do not add a region just to have one. A region is meaningful only when the file actually contains that category of code. For example, add a `Types` region only when the file declares multiple types, add a `Support` region only when there is private support code for that file, and add a `Froms` region only when there are `From` implementations.
+
+In particular:
+
+- Do not add a `Modules` region to a regular source file. That region is reserved for `main.rs`, `lib.rs`, and `mod.rs` files.
+- Do not add a `Types` region, or any other region, to a file that defines only a single type. A single-type file starts directly with that type, with no leading region.
+- Add the regions described below only when their content is actually present in the file.
+
 #### Typical Code Regions
 
-**In `main.rs`, `lib.rs`, and all `mod.rs` files:**
+**In `main.rs`, `lib.rs`, and all `mod.rs` files only:**
 
 - There will be a code region at the top (after the eventual module comments `//!`) named `Modules`.
 - This will contain all of the `mod ..` imports and reexports like `pub use sub_module::*` when appropriate.
+- Do not add this `Modules` region to any other file. A regular source file does not declare modules and must not start with this region.
 
 **For Tests Block in Source Code Files:**
 
