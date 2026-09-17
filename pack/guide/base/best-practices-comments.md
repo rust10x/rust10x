@@ -53,13 +53,14 @@ When these sections are present, each should use its corresponding code region. 
 
 #### Do Not Add Regions Everywhere
 
-Do not start every source file with a code region, and do not add a region just to have one. A region is meaningful only when the file actually contains that category of code. For example, add a `Types` region only when the file declares multiple types, add a `Support` region only when there is private support code for that file, and add a `Froms` region only when there are `From` implementations.
+Do not start every source file with a code region, and do not add a region just to have one. Add a region only when the file actually contains that category of code:
 
-In particular:
+- Add a `Modules` region only in `main.rs`, `lib.rs`, and `mod.rs` files.
+- Add a `Support` region only when the file has private support code.
+- Add a `Froms` region only when the file has `From` implementations.
+- Add a `Tests` region only when the file has inlined unit tests.
 
-- Do not add a `Modules` region to a regular source file. That region is reserved for `main.rs`, `lib.rs`, and `mod.rs` files.
-- Do not add a `Types` region, or any other region, to a file that defines only a single type. A single-type file starts directly with that type, with no leading region.
-- Add the regions described below only when their content is actually present in the file.
+When a file does hold several distinct sections, group each self-contained one in a region, such as a group of factory functions or one type together with its `impl` blocks. The module comment `//!` stays at the top, followed by the `use` declarations, and then the regions. A file with a single main type, or without distinct sections, does not need a region; the main type simply starts at the top.
 
 #### Typical Code Regions
 

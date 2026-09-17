@@ -128,6 +128,8 @@ When writing or adding code to a file, follow this structure.
 
 - If there are many types, put them in a code comment region called "Types" (see comments-best-practices.md for code comment regions).
 
+- Group distinct sections of the file with a code region when each is self-contained, such as a group of factory functions or one type together with its `impl` blocks. A file that is not divided into distinct sections, or that holds a single main type, does not need a region; the main type simply starts at the top.
+
 - Then add the public functions for this module.
 
 - Then add public `impl` blocks, grouping related methods by category when that improves readability.
