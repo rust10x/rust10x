@@ -57,7 +57,7 @@ impl From<Source> for Target {
 
 ## Private Support Code
 
-Place private functions, implementations, and types that are specific to one source file in a `Support` region after the public API and trait implementations:
+Place private functions, implementations, and types that are specific to one source file in a `Support` region at the bottom of the file, after all other non-test code. When present, `Support` must be the final non-test region, immediately before the `Tests` region if one exists. If there is no `Tests` region, `Support` must be the final section of the file. Do not place public API, trait implementations, or other non-test sections after it:
 
 ```rust
 // region:    --- Support

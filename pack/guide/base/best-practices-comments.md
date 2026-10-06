@@ -84,7 +84,7 @@ This inline pattern applies only to ordinary source files, never to `main.rs`, `
 
 **Inlined Support Functions/Types:**
 
-- Sometimes a source file will have some private functions specific to the file's logic. Before the eventual test code region, we have a `Support` code region with the private types/functions there.
+- Sometimes a source file will have private functions, implementations, or types specific to the file's logic. Place them in a `Support` code region at the bottom of the file, after all other non-test code. When present, `Support` must be the final non-test region, immediately before the `Tests` region if one exists. If there is no `Tests` region, `Support` must be the final section of the file. Do not place public API, trait implementations, or other non-test sections after it.
 
 **For `From` and similar blanket trait implementations:**
 
