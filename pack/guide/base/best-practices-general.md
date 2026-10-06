@@ -122,6 +122,8 @@ Now supported for tuples of length 1 through 12. You can collect into multiple c
 
 See `best-practices-code-structure.md` for the complete source-file and module organization guidance.
 
+In particular, follow its Module Files and Tests sections for `main.rs`, `lib.rs`, and every `mod.rs`: use a `Modules` region in each, keep `main.rs` minimal with its function imports below that region, keep `lib.rs` and `mod.rs` focused on module wiring and reexports, and place tests in external `main_tests.rs`, `lib_tests.rs`, or `mod_tests.rs` files. Use dedicated implementation/type submodules and intentional reexports to flatten APIs when appropriate. See `best-practices-comments.md` for the exact region formatting and placement.
+
 When writing or adding code to a file, follow this structure.
 
 - Types in that file, if any, should be at the top, from the "container" type(s) to leaf ones.

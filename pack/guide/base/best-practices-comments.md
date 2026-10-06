@@ -60,7 +60,11 @@ Do not start every source file with a code region, and do not add a region just 
 - Add a `Froms` region only when the file has `From` implementations.
 - Add a `Tests` region only when the file has inlined unit tests.
 
+For `main.rs`, `lib.rs`, and every `mod.rs`, never add inline tests or a `Tests` region. Put tests in external sibling files named `main_tests.rs`, `lib_tests.rs`, or `mod_tests.rs`, and put only their conditional module declarations inside the `Modules` region.
+
 When a file does hold several distinct sections, group each self-contained one in a region, such as a group of factory functions or one type together with its `impl` blocks. The module comment `//!` stays at the top, followed by the `use` declarations, and then the regions. A file with a single main type, or without distinct sections, does not need a region; the main type simply starts at the top.
+
+The module-entry files are exceptions to that ordinary source-file ordering: their `Modules` region follows any module-level documentation. In `main.rs`, place the `use` declarations needed by `main` below the region. Keep `lib.rs` and `mod.rs` limited to module-level documentation and the module wiring/imports/reexports within that region.
 
 #### Typical Code Regions
 
@@ -68,11 +72,15 @@ When a file does hold several distinct sections, group each self-contained one i
 
 - There will be a code region at the top (after the eventual module comments `//!`) named `Modules`.
 - This will contain all of the `mod ..` imports and reexports like `pub use sub_module::*` when appropriate.
-- Do not add this `Modules` region to any other file. A regular source file does not declare modules and must not start with this region.
+- Do not add this `Modules` region to any other file. An ordinary source file may declare an external test module inside its `Tests` region, but must not use a `Modules` region.
+
+Keep `main.rs` to a minimal entry point that delegates application work to a submodule. Keep implementation details and types out of `lib.rs` and `mod.rs`, using appropriately named submodules, including `_impl` or `_types` when suitable. Intentional reexports may flatten the API. See the Module Files and Tests sections of `best-practices-code-structure.md` for the complete organization rules.
 
 **For Tests Block in Source Code Files:**
 
 - As described in the `test-best-practices`, when unit tests are inlined in a source file, the `#[cfg(test)] mod tests { ... }` block is wrapped in a `Tests` code region.
+
+This inline pattern applies only to ordinary source files, never to `main.rs`, `lib.rs`, or `mod.rs`. Tests for those module levels belong in external test files as described above.
 
 **Inlined Support Functions/Types:**
 

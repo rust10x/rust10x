@@ -100,9 +100,13 @@ mod tests;
 
 Follow `best-practices-test.md` for test naming, setup, execution, checks, result types, and test support utilities.
 
+The inline-test and `Tests` region patterns above apply to ordinary source files. Never put test bodies or inline test modules in `main.rs`, `lib.rs`, or any `mod.rs`. For tests at those levels, use sibling files named `main_tests.rs`, `lib_tests.rs`, or `mod_tests.rs`, respectively. Declare the external test module with `#[cfg(test)]` and `#[path = "..."]` inside the entry file's `Modules` region.
+
 ## Module Files
 
-Use `mod.rs` primarily for module declarations and intentional reexports. Put those declarations and reexports in a `Modules` region after any module-level documentation:
+Use a `Modules` region in `main.rs`, `lib.rs`, and every `mod.rs`, after any module-level documentation. Put module declarations and intentional reexports inside that region. Do not use a `Modules` region in ordinary source files.
+
+Keep `lib.rs` and `mod.rs` limited to module-level documentation and the `Modules` region containing module declarations and imports/reexports that wire the module API. Put types, functions, inherent implementations, trait implementations, and other implementation details in dedicated submodules. Use appropriate domain names, or `_impl` and `_types` submodules when those names fit. Flattening the public API through intentional reexports is acceptable.
 
 ```rust
 //! Module-level documentation.
@@ -117,7 +121,9 @@ pub use event_base::*;
 // endregion: --- Modules
 ```
 
-Implementation details should normally live in dedicated source files rather than in `mod.rs`.
+Keep `main.rs` minimal. Put its `Modules` region first, followed by the `use` declarations needed by `main`, then a small `main` function that delegates the heavy lifting to a submodule. Keep application logic and implementation details out of `main.rs`.
+
+Neither `main.rs`, `lib.rs`, nor any `mod.rs` may contain inline tests. Use the external test-file pattern described in the Tests section, with only the conditional test-module declaration inside the `Modules` region.
 
 ## Macro Modules
 
